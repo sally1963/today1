@@ -90,7 +90,12 @@ def millions(n):
 
 def short(s, n=30):
     s = clean(s)
-    return s if len(s) <= n else s[:n - 1].rstrip() + "…"
+    if len(s) <= n:
+        return s
+    cut = s[:n - 1]
+    if " " in cut[n // 2:]:
+        cut = cut[:cut.rindex(" ")]
+    return cut.rstrip(" ,:-") + "…"
 
 WORD = {1: "one", 2: "two", 3: "three"}
 def narration():
@@ -113,7 +118,43 @@ def narration():
                 "4~10위, 음악·스포츠·키즈 순위는\n'오늘의 1위'에서!\n내일 순위도 팔로우하세요"))
     return out
 
-def seconds(line):  # 영어 말하기 속도(약 2.6단어/초) + 여유
+MODE = os.environ.get("VOICE", "en")  # en: 영어 목소리+한글 자막 / ko: 한국어 목소리+영어 자막
+
+def views_say(n):  # 읽기 좋은 숫자(쉼표 없이)
+    return f"{n/1e8:.1f}억".replace(".0억", "억") if n >= 1e8 else f"{round(n/1e4)}만"
+
+def m_short(n):
+    return f"{n/1e6:.1f}M".replace(".0M", "M")
+
+def narration_ko():
+    """(한국어 목소리, 영어 자막) 목록"""
+    where_en = "in the world" if REGION == "global" else "in South Korea"
+    out = [(f"오늘 {'전 세계' if REGION == 'global' else '대한민국'}에서 가장 많이 본 영상은 무엇일까요? TOP 3를 공개합니다!",
+            f"What was the most-watched video {where_en} today?\nHere's the TOP 3!")]
+    for r in (3, 2, 1):
+        if len(items) < r:
+            continue
+        it = items[r - 1]; ch = channel(it[1])
+        tags = [clean(x) for x in it[1].split(" · ")[1:] if not re.match(r"차트 \d+위", x)]
+        if HANGUL.search(it[0]):
+            what = f"{clean(it[0])}"
+        elif tags:
+            what = f"{' '.join(tags)} 영상"
+        else:
+            what = f"{ch} 채널 영상" if ch else "이 영상"
+        head = "그리고 대망의 1위!" if r == 1 else f"{r}위!"
+        tail = f"하루 무려 {views_say(it[2])} 회입니다!" if r == 1 else f"하루 {views_say(it[2])} 회를 기록했습니다."
+        ti = clean(en(it[0]))
+        sub_head = ("And No.1" if r == 1 else f"No.{r}") + (f" — {clean(en(ch))}" if ch else "")
+        out.append((f"{head} {what}. {tail}",
+                    f"{sub_head}\n'{short(ti, 32)}'\n{m_short(it[2])} views in {'just ' if r == 1 else ''}one day!"))
+    out.append(("4위부터 10위, 음악과 스포츠 순위는 검색창에 오늘의 1위! 내일 순위도 팔로우하세요.",
+                "Ranks 4–10, music, sports & kids:\nsearch 'Today's No.1'\nFollow for tomorrow's ranking!"))
+    return out
+
+def seconds(line):  # 말하기 속도에 맞춘 장면 길이
+    if HANGUL.search(line):
+        return round(max(3.5, len(re.sub(r"[^가-힣0-9A-Za-z]", "", line)) / 6.0 + 0.9), 1)
     return round(max(3.5, len(line.split()) / 3.0 + 0.8), 1)
 
 # ---------- 그리기 도구 ----------
@@ -272,24 +313,34 @@ def encode(png, sec, out):
     os.replace(tmp, out)
 
 def main(preview=False):
-    nar = narration()
+    nar = narration_ko() if MODE == "ko" else narration()
     pics = [scene_intro()] + [scene_rank(r, items[r - 1]) for r in (3, 2, 1) if len(items) >= r] + [scene_outro()]
     subs = os.environ.get("SUB", "1") == "1"
     scenes = []
-    for im, (eng, ko) in zip(pics, nar):
-        scenes.append((subtitle(im, ko) if subs else im, seconds(eng)))
+    vdir = os.environ.get("VOICE_DIR")  # voice1.wav ~ voiceN.wav 가 있으면 목소리를 합칩니다
+    wavs = []
+    for k, (im, (say, sub)) in enumerate(zip(pics, nar)):
+        sec = seconds(say)
+        w = os.path.join(vdir, f"voice{k+1}.wav") if vdir else None
+        if w and os.path.exists(w):
+            d = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", w],
+                                     capture_output=True, text=True).stdout.strip())
+            sec = round(max(3.0, d + 0.7), 2)
+            wavs.append((w, sec))
+        scenes.append((subtitle(im, sub) if subs else im, sec))
     os.makedirs(OUTDIR, exist_ok=True)
-    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}")
+    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ("-ko" if MODE == "ko" else ""))
     # 내레이션 대본(영어)·자막 시간표
     tsec, rows, srt = 0.0, [], []
     def ts(x):
         return f"{int(x//3600):02}:{int(x%3600//60):02}:{int(x%60):02},{int(round(x%1*1000)):03}"
     for k, ((eng, ko), (_, sec)) in enumerate(zip(nar, scenes)):
-        rows.append(f"[{tsec:4.1f}초 ~ {tsec+sec:4.1f}초]\n영어 목소리: {eng}\n한글 자막: {ko.replace(chr(10), ' ')}\n")
+        vl, sl = ("한국어 목소리", "영어 자막") if MODE == "ko" else ("영어 목소리", "한글 자막")
+        rows.append(f"[{tsec:4.1f}초 ~ {tsec+sec:4.1f}초]\n{vl}: {eng}\n{sl}: {ko.replace(chr(10), ' ')}\n")
         srt.append(f"{k+1}\n{ts(tsec+0.2)} --> {ts(tsec+sec-0.1)}\n{ko}\n")
         tsec += sec
     open(base + "-narration.txt", "w", encoding="utf-8").write("\n".join(rows))
-    open(base + "-ko.srt", "w", encoding="utf-8").write("\n".join(srt))
+    open(base + "-subtitles.srt", "w", encoding="utf-8").write("\n".join(srt))
     work = tempfile.mkdtemp()
     if preview:
         for k, (im, _) in enumerate(scenes):
@@ -306,6 +357,17 @@ def main(preview=False):
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
                     "-c", "copy", "-movflags", "+faststart", tmp], check=True)
     os.replace(tmp, out)
+    if wavs and len(wavs) == len(scenes):  # 장면마다 목소리를 0.3초 뒤에 시작해 이어 붙입니다
+        args, flt = [], []
+        for k, (w, sec) in enumerate(wavs):
+            args += ["-i", w]
+            flt.append(f"[{k+1}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=300:all=1,apad,atrim=0:{sec}[a{k}]")
+        flt.append("".join(f"[a{k}]" for k in range(len(wavs))) + f"concat=n={len(wavs)}:v=0:a=1[aout]")
+        tmp2 = out[:-4] + ".part.mp4"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", out, *args, "-filter_complex", ";".join(flt),
+                        "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
+                        "-shortest", "-movflags", "+faststart", tmp2], check=True)
+        os.replace(tmp2, out)
     print(out)
 
 if __name__ == "__main__":
