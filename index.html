@@ -230,6 +230,10 @@ html{scroll-padding-top:80px}:root.app{scroll-padding-top:170px}
 .offline{background:#2b2b2b;color:#fff;text-align:center;font-size:14px;font-weight:700;padding:8px 12px}
 .installcard{display:grid;grid-template-columns:48px minmax(0,1fr) auto 36px;gap:12px;align-items:center;background:var(--card);margin:14px max(4vw,12px) 0;padding:12px 14px;border-radius:18px;box-shadow:0 10px 30px -18px rgba(0,0,0,.4)}
 .installcard[hidden]{display:none}
+.installcard.sheet{position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));margin:0;z-index:48;border:2px solid var(--gold);box-shadow:0 24px 60px -12px rgba(0,0,0,.55);animation:sheetin .25s ease-out}
+:root.app .installcard.sheet{bottom:calc(78px + env(safe-area-inset-bottom))}
+.installcard.sheet p{font-size:14px;color:var(--ink,inherit);font-weight:600}
+@keyframes sheetin{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 .installcard img{border-radius:12px}
 .installcard strong{display:block;font-size:15px;line-height:1.3}
 .installcard p{margin:2px 0 0;font-size:13px;color:var(--sub)}
@@ -702,10 +706,10 @@ applyLang();
  const gotPrompt=e=>{deferred=e;ab.hidden=false;go.hidden=false;txt.textContent=T("홈 화면에 추가해 앱처럼 쓰세요.");if(!dismissed&&!isStandalone())card.hidden=false};
  if(window.__bip)gotPrompt(window.__bip);
  addEventListener("beforeinstallprompt",e=>{e.preventDefault();gotPrompt(e)});
- const install=async()=>{if(deferred){deferred.prompt();try{await deferred.userChoice}catch(x){}deferred=null;card.hidden=true;ab.hidden=true}
-  else if(isIOS)showHint(IOS_TXT);else showHint(AND_TXT)};
+ const install=async()=>{if(deferred){card.classList.remove("sheet");deferred.prompt();try{await deferred.userChoice}catch(x){}deferred=null;card.hidden=true;ab.hidden=true}
+  else{showHint(isIOS?IOS_TXT:AND_TXT);card.classList.add("sheet")}};
  go.addEventListener("click",install);ab.addEventListener("click",install);
- no.addEventListener("click",()=>{card.hidden=true;try{localStorage.setItem("installNo","1")}catch(e){}});
+ no.addEventListener("click",()=>{card.hidden=true;card.classList.remove("sheet");try{localStorage.setItem("installNo","1")}catch(e){}});
  if(isIOS&&!isStandalone()&&!dismissed&&root.classList.contains("app"))showHint(IOS_TXT);
  // 안드로이드 크롬이 설치 창을 바로 주지 않을 때(첫 방문 등) 메뉴로 설치하는 방법을 알려 줍니다.
  if(isAndroid&&!isStandalone()&&!dismissed)setTimeout(()=>{if(!deferred&&!isStandalone())showHint(AND_TXT)},4000);

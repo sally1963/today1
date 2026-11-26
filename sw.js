@@ -1,7 +1,7 @@
 /* 오늘의 1위 — 서비스 워커 (앱 설치·오프라인 보기)
    화면 파일은 저장해 두고 바로 열고, 순위 데이터는 항상 최신을 먼저 받아 옵니다.
    화면 코드를 바꿔 올릴 때는 아래 VERSION 숫자를 올려 주세요. */
-const VERSION = "v2-2026-11-26";
+const VERSION = "v3-2026-11-26";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 const FONT = "fonts";
