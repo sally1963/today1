@@ -701,18 +701,20 @@ applyLang();
  let deferred=null;
  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
  const isAndroid=/android/i.test(navigator.userAgent);
+ const isSamsung=/SamsungBrowser/i.test(navigator.userAgent);
+ const SAM_TXT="삼성 인터넷 아래쪽 ≡ 메뉴를 누른 뒤 ‘현재 페이지 추가’ → ‘홈 화면’을 고르세요. 주소창에 설치 아이콘(↓)이 보이면 그것을 눌러도 됩니다.";
  const IOS_TXT="Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.",AND_TXT="크롬 오른쪽 위 ⋮ 메뉴를 누른 뒤 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르세요.";
  const showHint=k=>{txt.textContent=T(k);go.hidden=true;ab.hidden=false;card.hidden=false};
  const gotPrompt=e=>{deferred=e;ab.hidden=false;go.hidden=false;txt.textContent=T("홈 화면에 추가해 앱처럼 쓰세요.");if(!dismissed&&!isStandalone())card.hidden=false};
  if(window.__bip)gotPrompt(window.__bip);
  addEventListener("beforeinstallprompt",e=>{e.preventDefault();gotPrompt(e)});
  const install=async()=>{if(deferred){card.classList.remove("sheet");deferred.prompt();try{await deferred.userChoice}catch(x){}deferred=null;card.hidden=true;ab.hidden=true}
-  else{showHint(isIOS?IOS_TXT:AND_TXT);card.classList.add("sheet")}};
+  else{showHint(isIOS?IOS_TXT:isSamsung?SAM_TXT:AND_TXT);card.classList.add("sheet")}};
  go.addEventListener("click",install);ab.addEventListener("click",install);
  no.addEventListener("click",()=>{card.hidden=true;card.classList.remove("sheet");try{localStorage.setItem("installNo","1")}catch(e){}});
  if(isIOS&&!isStandalone()&&!dismissed&&root.classList.contains("app"))showHint(IOS_TXT);
  // 안드로이드 크롬이 설치 창을 바로 주지 않을 때(첫 방문 등) 메뉴로 설치하는 방법을 알려 줍니다.
- if(isAndroid&&!isStandalone()&&!dismissed)setTimeout(()=>{if(!deferred&&!isStandalone())showHint(AND_TXT)},4000);
+ if(isAndroid&&!isStandalone()&&!dismissed)setTimeout(()=>{if(!deferred&&!isStandalone())showHint(isSamsung?SAM_TXT:AND_TXT)},4000);
  addEventListener("appinstalled",()=>{card.hidden=true;ab.hidden=true});
  // 오프라인 저장 (서비스 워커)
  if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}

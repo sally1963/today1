@@ -143,7 +143,8 @@
 "Ranking type",
 "App menu",
 "Tap the Share button at the bottom of Safari, then choose “Add to Home Screen”.",
-"Tap the ⋮ menu at the top right of Chrome, then choose “Install app” or “Add to Home screen”."
+"Tap the ⋮ menu at the top right of Chrome, then choose “Install app” or “Add to Home screen”.",
+"Tap the ≡ menu at the bottom of Samsung Internet, then choose “Add page to” → “Home screen”. If you see an install icon (↓) in the address bar, you can tap that instead."
 ],
 "data": [
 "Videos made by individual creators only, excluding brand and kids' channels.",

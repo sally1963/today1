@@ -143,7 +143,8 @@
 "Type de classement",
 "Menu de l'app",
 "Touchez le bouton Partager en bas de Safari, puis choisissez « Sur l'écran d'accueil ».",
-"Touchez le menu ⋮ en haut à droite de Chrome, puis choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil »."
+"Touchez le menu ⋮ en haut à droite de Chrome, puis choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+"Touchez le menu ≡ en bas de Samsung Internet, puis choisissez « Ajouter la page à » → « Écran d'accueil ». Si une icône d'installation (↓) apparaît dans la barre d'adresse, vous pouvez aussi la toucher."
 ],
 "data": [
 "Uniquement des vidéos de créateurs individuels, sans chaînes de marques ni pour enfants.",

@@ -143,7 +143,8 @@
 "Tipo de ranking",
 "Menú de la app",
 "Toca el botón Compartir en la parte inferior de Safari y elige «Añadir a pantalla de inicio».",
-"Toca el menú ⋮ arriba a la derecha de Chrome y elige «Instalar aplicación» o «Añadir a pantalla de inicio»."
+"Toca el menú ⋮ arriba a la derecha de Chrome y elige «Instalar aplicación» o «Añadir a pantalla de inicio».",
+"Toca el menú ≡ en la parte inferior de Samsung Internet y elige «Añadir página a» → «Pantalla de inicio». Si ves un icono de instalación (↓) en la barra de direcciones, también puedes tocarlo."
 ],
 "data": [
 "Solo videos de creadores individuales, sin canales de marcas ni infantiles.",
