@@ -69,6 +69,53 @@ WD = "월화수목금토일"[day.weekday()]
 DATE = f"{day.month}월 {day.day}일 ({WD})"
 WHERE = "전세계" if REGION == "global" else "대한민국"
 
+# 영어 제목(번역 파일)과 내레이션·자막
+_s = open(os.path.join(ROOT, "i18n/source.js"), encoding="utf-8").read()
+_e = open(os.path.join(ROOT, "i18n/en.js"), encoding="utf-8").read()
+SRC_DATA = json.loads(_s[_s.index("=") + 1:_s.rindex(";")])["data"]
+EN_DATA = json.loads(_e[_e.index(").en=") + 5:_e.rindex(";")])["data"]
+HANGUL = re.compile("[가-힣]")
+def en(s):
+    if not HANGUL.search(s):
+        return s
+    try:
+        v = EN_DATA[SRC_DATA.index(s)]
+        return v or s
+    except ValueError:
+        return s
+
+def millions(n):
+    m = n / 1e6
+    return (f"{m:.0f}" if m >= 10 else f"{m:.1f}".rstrip("0").rstrip(".")) + " million"
+
+def short(s, n=30):
+    s = clean(s)
+    return s if len(s) <= n else s[:n - 1].rstrip() + "…"
+
+WORD = {1: "one", 2: "two", 3: "three"}
+def narration():
+    where_en = "in the world" if REGION == "global" else "in South Korea"
+    out = [(f"What was the most-watched video {where_en} today? Here's the top three!",
+            f"오늘 {WHERE}에서 가장 많이 본 영상은?\nTOP 3를 공개합니다!")]
+    for r in (3, 2, 1):
+        if len(items) < r:
+            continue
+        it = items[r - 1]; ch = channel(it[1]); ti = clean(en(it[0]))
+        lead = "And number one" if r == 1 else f"Number {WORD[r]}"
+        if ti.isupper():
+            ti = ti.capitalize().replace(" i ", " I ")
+        frm = f", from {clean(en(ch))}" if ch and ch.lower() not in ti.lower() else ""
+        tail = f"with {millions(it[2])} views in just one day!" if r == 1 else f"{millions(it[2])} views in a day."
+        ko_head = (f"그리고 1위는" if r == 1 else f"{r}위는") + (f" {short(ch, 14)}의" if ch else "")
+        out.append((f"{lead}{frm}: {ti.rstrip('.!')}! {tail[0].upper() + tail[1:]}",
+                    f"{ko_head}\n'{short(it[0])}'\n하루 {views(it[2])} 회!"))
+    out.append(("For the full top ten, search Today's Number One. Follow for tomorrow's ranking!",
+                "4~10위, 음악·스포츠·키즈 순위는\n'오늘의 1위'에서!\n내일 순위도 팔로우하세요"))
+    return out
+
+def seconds(line):  # 영어 말하기 속도(약 2.6단어/초) + 여유
+    return round(max(3.5, len(line.split()) / 3.0 + 0.8), 1)
+
 # ---------- 그리기 도구 ----------
 def bg():
     im = Image.new("RGB", (W, H), RED)
@@ -196,6 +243,24 @@ def scene_outro():
     center(d, 1320, "매일 밤 12시 새 순위 · 프로필 링크", font("bold", 40), (255, 225, 230))
     return im
 
+def subtitle(im, text):
+    """아래쪽 버튼 영역(약 380px) 바로 위에 한글 자막을 그립니다."""
+    d = ImageDraw.Draw(im); f = font("bold", 50)
+    lines = []
+    for part in text.split("\n"):
+        lines += wrap(d, part, f, W - 200, 2)
+    lines = lines[:3]
+    lh = 68; hgt = lh * len(lines) + 44; cy = 1560
+    y0 = cy - hgt / 2
+    wmax = max(d.textlength(l, font=f) for l in lines)
+    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(ov).rounded_rectangle([(W - wmax) / 2 - 36, y0, (W + wmax) / 2 + 36, y0 + hgt], 28, fill=(20, 8, 12, 190))
+    im.paste(ov, (0, 0), ov)
+    d = ImageDraw.Draw(im)
+    for k, l in enumerate(lines):
+        d.text((W // 2, y0 + 22 + lh * k + lh / 2), l, font=f, fill="white", anchor="mm")
+    return im
+
 # ---------- 영상으로 묶기 ----------
 def encode(png, sec, out):
     tmp = out[:-4] + ".part.mp4"
@@ -207,12 +272,24 @@ def encode(png, sec, out):
     os.replace(tmp, out)
 
 def main(preview=False):
-    scenes = [(scene_intro(), 2.6)]
-    for r in (3, 2, 1):
-        if len(items) >= r:
-            scenes.append((scene_rank(r, items[r - 1]), 4.2 if r == 1 else 3.3))
-    scenes.append((scene_outro(), 3.2))
+    nar = narration()
+    pics = [scene_intro()] + [scene_rank(r, items[r - 1]) for r in (3, 2, 1) if len(items) >= r] + [scene_outro()]
+    subs = os.environ.get("SUB", "1") == "1"
+    scenes = []
+    for im, (eng, ko) in zip(pics, nar):
+        scenes.append((subtitle(im, ko) if subs else im, seconds(eng)))
     os.makedirs(OUTDIR, exist_ok=True)
+    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}")
+    # 내레이션 대본(영어)·자막 시간표
+    tsec, rows, srt = 0.0, [], []
+    def ts(x):
+        return f"{int(x//3600):02}:{int(x%3600//60):02}:{int(x%60):02},{int(round(x%1*1000)):03}"
+    for k, ((eng, ko), (_, sec)) in enumerate(zip(nar, scenes)):
+        rows.append(f"[{tsec:4.1f}초 ~ {tsec+sec:4.1f}초]\n영어 목소리: {eng}\n한글 자막: {ko.replace(chr(10), ' ')}\n")
+        srt.append(f"{k+1}\n{ts(tsec+0.2)} --> {ts(tsec+sec-0.1)}\n{ko}\n")
+        tsec += sec
+    open(base + "-narration.txt", "w", encoding="utf-8").write("\n".join(rows))
+    open(base + "-ko.srt", "w", encoding="utf-8").write("\n".join(srt))
     work = tempfile.mkdtemp()
     if preview:
         for k, (im, _) in enumerate(scenes):
@@ -224,7 +301,7 @@ def main(preview=False):
         o = os.path.join(work, f"s{k}.mp4"); encode(p, sec, o); parts.append(o)
     lst = os.path.join(work, "list.txt")
     open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
-    out = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}.mp4")
+    out = base + ".mp4"
     tmp = out[:-4] + ".part.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
                     "-c", "copy", "-movflags", "+faststart", tmp], check=True)
