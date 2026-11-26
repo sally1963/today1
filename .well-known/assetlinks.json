@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.today1",
+      "sha256_cert_fingerprints": ["PWABuilder가 알려 주는 SHA-256 지문을 여기에 붙여 넣으세요"]
+    }
+  }
+]

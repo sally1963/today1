@@ -1,0 +1,26 @@
+{
+  "name": "오늘의 1위 — Today's No.1",
+  "short_name": "오늘의 1위",
+  "description": "유튜브·쇼츠·인스타 릴스 조회수 순위를 분야별로 실시간·누적으로 보는 앱",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#fff6ec",
+  "theme_color": "#ff1f3d",
+  "categories": ["entertainment", "music", "news"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "음악 순위", "short_name": "음악", "url": "./?source=shortcut#music-kr", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "스포츠 순위", "short_name": "스포츠", "url": "./?source=shortcut#sports-global", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "오늘의 해설", "short_name": "해설", "url": "./posts/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

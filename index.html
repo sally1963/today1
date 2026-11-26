@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘의 1위</title>
+<meta name="description" content="유튜브·쇼츠·인스타 릴스 조회수 순위를 분야별(종합·인플루언서·음악·키즈·광고·사회·스포츠)로 전세계와 South Korea로 나눠 실시간·누적으로 한눈에 보는 사이트">
+<meta property="og:title" content="오늘의 1위 — 전세계·South Korea 조회수 순위">
+<meta property="og:description" content="유튜브·쇼츠·릴스 조회수 실시간·누적 순위를 분야별로 한눈에">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#ff1f3d">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="오늘의 1위">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 시끌벅적한 시상식 전광판 — 들뜨고 화려하지만 숫자는 정확하게
+   IDEA: 플랫폼마다 색이 바뀌는 시상대(포디움) + 순위 전광판
+   PICTURE: 상단 컬러 밴드 위에 1·2·3위 시상대, 높이는 조회수에 비례
+   COLOUR and TYPE: 유튜브 레드 / 쇼츠 오렌지 / 릴스 핑크 / 인플루언서 틸, 노랑 포인트; Black Han Sans + Noto Sans KR
+   LAYOUT: 컬러 밴드(로고·메뉴·시상대) → 실시간 | 누적 두 단 랭킹 → 출처 */
+:root{color-scheme:light dark;
+  --bg:light-dark(#fff6ec,#140f13);--card:light-dark(#ffffff,#211a20);--ink:light-dark(#1b1216,#fbf3ee);
+  --sub:light-dark(#6b5a60,#bfaeb4);--line:light-dark(#f0e2d6,#33282f);--gold:#ffc83d;
+  --c:#ff1f3d;--c2:#ff7a90;--on:#fff}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+body[data-p=total]{--c:#ff1f3d;--c2:#ff7a90}
+body[data-p=society]{--c:#c2185b;--c2:#ff8a65}
+body[data-p=sports]{--c:#0087b8;--c2:#4fe0a6}
+.sum{background:var(--ink);color:var(--bg)}
+body[data-p=shorts]{--c:#ff5a1f;--c2:#ffb15c}
+body[data-p=reels]{--c:#e1306c;--c2:#ffb340}
+body[data-p=inf]{--c:#00a99a;--c2:#4b8bff}
+body[data-p=music]{--c:#7a2df0;--c2:#ff5c8a}
+body[data-p=kids]{--c:#1fa64a;--c2:#ffd23f}
+body[data-p=ad]{--c:#2459e0;--c2:#20c4d8}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+a{color:inherit}
+.band{padding:clamp(22px,4vw,52px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--c) 0%,var(--c) 55%,var(--c2) 140%);color:var(--on);position:relative;overflow:hidden;transition:background .4s}
+.hero::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.08) 0 2px,transparent 2px 46px);pointer-events:none}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;position:relative}
+h1{font:400 clamp(40px,7vw,72px)/1 "Black Han Sans",sans-serif;margin:0;letter-spacing:.5px;text-shadow:0 4px 0 rgba(0,0,0,.18)}
+h1 span{color:var(--gold)}
+.date{font-weight:700;font-size:15px;background:rgba(0,0,0,.22);padding:8px 14px;border-radius:999px;white-space:nowrap}
+nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;position:relative}
+.tab{appearance:none;border:0;cursor:pointer;font:700 16px "Noto Sans KR",sans-serif;min-height:46px;padding:0 20px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;gap:8px}
+.tab[aria-selected=true]{background:#fff;color:var(--c);box-shadow:0 6px 0 rgba(0,0,0,.18)}
+.tab:focus-visible,.seg button:focus-visible,.row:focus-visible,.go:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor}
+.seg{display:inline-flex;background:rgba(0,0,0,.22);border-radius:999px;padding:4px;margin-top:14px;position:relative}
+.seg button{appearance:none;border:0;cursor:pointer;font:700 15px "Noto Sans KR",sans-serif;min-height:44px;padding:0 22px;border-radius:999px;background:transparent;color:#fff}
+.seg button[aria-pressed=true]{background:var(--gold);color:#2a1a00}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:clamp(16px,3vw,40px);align-items:end;margin-top:26px;position:relative}
+.stage h2{font:400 clamp(30px,4.4vw,48px)/1.08 "Black Han Sans",sans-serif;margin:0 0 10px;text-wrap:balance}
+.stage p{margin:0;opacity:.92;max-width:44ch}
+.pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end;min-height:300px}
+.step{display:flex;flex-direction:column;justify-content:flex-end;text-decoration:none;color:inherit}
+.step .who{font-size:14px;font-weight:700;line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
+.step .n{font:400 clamp(22px,3vw,30px)/1 "Black Han Sans",sans-serif;text-align:center;margin-bottom:8px;white-space:nowrap}
+.block{border-radius:16px 16px 6px 6px;background:rgba(255,255,255,.95);color:var(--c);display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font:400 44px/1 "Black Han Sans",sans-serif;box-shadow:inset 0 -14px 0 rgba(0,0,0,.08),0 10px 0 rgba(0,0,0,.15);transform-origin:bottom;animation:rise .7s cubic-bezier(.2,.9,.3,1.2) both}
+.s1 .block{background:var(--gold);color:#5a3a00}
+.step:hover .block{filter:brightness(1.05)}
+@keyframes rise{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+.pod-empty{grid-column:1/-1;align-self:center;text-align:center;font-weight:700;background:rgba(0,0,0,.18);border-radius:18px;padding:28px}
+main .wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.4vw,28px)}
+.board{background:var(--card);border-radius:22px;padding:clamp(16px,2.2vw,26px);box-shadow:0 1px 0 var(--line),0 18px 40px -26px rgba(60,20,30,.35)}
+.bh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.bh h3{font:400 26px/1.1 "Black Han Sans",sans-serif;margin:0;display:flex;align-items:center;gap:10px}
+.pill{font:700 13px "Noto Sans KR",sans-serif;padding:5px 11px;border-radius:999px;background:var(--c);color:#fff;white-space:nowrap}
+.pill.t{background:var(--gold);color:#3a2600}
+.live{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 0 var(--c);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.asof{font-size:13px;color:var(--sub);margin:0 0 12px}
+ol{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:44px 54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 8px;border-radius:14px;text-decoration:none;min-height:66px}
+.row:hover{background:color-mix(in srgb,var(--c) 9%,transparent)}
+li+li .row{border-top:1px solid var(--line);border-radius:0}
+li+li .row:hover{border-radius:14px}
+.rk{font:400 28px/1 "Black Han Sans",sans-serif;text-align:center;color:var(--sub)}
+li:nth-child(1) .rk{color:var(--c);font-size:34px}li:nth-child(2) .rk,li:nth-child(3) .rk{color:var(--c)}
+.th{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden}
+.th svg{width:22px;height:22px;fill:#fff;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.th b{position:absolute;left:5px;bottom:3px;font:700 10px "Noto Sans KR";color:rgba(255,255,255,.9)}
+.tt{font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:15px}
+.ch{display:block;font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:5px;border-radius:5px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--c),var(--c2))}
+.vv{text-align:right;white-space:nowrap}
+.vv strong{display:block;font:400 21px/1.1 "Black Han Sans",sans-serif;color:var(--ink)}
+.vv small{font-size:12px;color:var(--sub)}
+.vv .play{display:block;margin-top:4px;font-size:12px;font-weight:700;color:var(--c)}
+.xh{font:700 15px "Noto Sans KR",sans-serif;margin:20px 0 4px;padding-top:14px;border-top:3px solid var(--c);color:var(--c)}
+.empty{border:2px dashed var(--line);border-radius:18px;padding:22px;text-align:center;color:var(--sub)}
+.empty strong{display:block;color:var(--ink);font-size:17px;margin-bottom:6px}
+.go{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:0 18px;border-radius:999px;background:var(--c);color:#fff;font-weight:700;text-decoration:none}
+.note{font-size:13px;color:var(--sub);margin:12px 4px 0}
+footer{color:var(--sub);font-size:14px}
+footer h4{font:400 22px "Black Han Sans",sans-serif;color:var(--ink);margin:0 0 10px}
+footer ul{margin:0;padding-left:18px;columns:2 320px;column-gap:40px}
+footer li{margin-bottom:6px;break-inside:avoid}
+@media(max-width:900px){main .wrap{grid-template-columns:minmax(0,1fr)}.stage{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.step .n{font-size:17px;white-space:normal;line-height:1.15}.row{grid-template-columns:30px 44px minmax(0,1fr) auto;gap:9px;padding:9px 2px}.th{width:44px;height:44px}.rk{font-size:22px}.vv strong{font-size:17px}.pod{min-height:240px}.block{font-size:32px}.tab{padding:0 14px;font-size:15px}.seg button{padding:0 16px}}
+@media(prefers-reduced-motion:reduce){.block,.live{animation:none}.hero{transition:none}}
+
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.th svg{position:relative;z-index:1}
+.th b{z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.livetag{display:inline-block;font:700 11px "Noto Sans KR";color:#fff;background:var(--c);border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:2px}
+.delta{display:block;font-size:12px;font-weight:700;color:var(--c)}
+.api{background:var(--card);border-radius:22px;padding:clamp(16px,2.2vw,26px);margin:0 auto;max-width:1240px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 20px;align-items:center;box-shadow:0 1px 0 var(--line)}
+.api h3{font:400 22px "Black Han Sans",sans-serif;margin:0 0 4px}
+.api p{margin:0;font-size:14px;color:var(--sub)}
+.api form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.api input,.api select{font:16px "Noto Sans KR",sans-serif;min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);padding:0 12px}
+.api input{width:min(340px,100%)}
+.btn{appearance:none;border:0;cursor:pointer;font:700 15px "Noto Sans KR",sans-serif;min-height:44px;padding:0 18px;border-radius:999px;background:var(--c);color:#fff}
+.btn.ghost{background:transparent;color:var(--c);border:2px solid var(--c)}
+.btn:focus-visible,.api input:focus-visible,.api select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#status{grid-column:1/-1;font-size:14px;font-weight:700}
+#status.err{color:#d61f3a}
+.trend{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px}
+.modal{position:fixed;inset:0;background:rgba(10,4,8,.82);display:none;place-items:center;z-index:50;padding:16px}
+.modal.on{display:grid}
+.mbox{width:min(960px,100%);background:#111;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.mbox.vert{width:min(420px,100%)}
+.frame{position:relative;aspect-ratio:16/9;background:#000}
+.mbox.vert .frame{aspect-ratio:9/16;max-height:78vh}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.mbar{display:flex;align-items:center;gap:10px;padding:12px 14px;color:#fff}
+.mbar strong{flex:1;font-size:15px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mbar a{color:#ffc83d;font-weight:700;font-size:14px;white-space:nowrap}
+.x{appearance:none;border:0;cursor:pointer;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:22px;flex:none}
+@media(max-width:700px){.api{grid-template-columns:minmax(0,1fr)}}
+
+.mile{position:relative;margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+.mchip{background:rgba(0,0,0,.22);border-radius:16px;padding:10px 14px;font-size:14px;line-height:1.4;max-width:100%}
+.mchip b{color:var(--gold)}
+.mtrack{height:8px;border-radius:8px;background:rgba(255,255,255,.25);margin-top:6px;overflow:hidden;width:min(360px,70vw)}
+.mtrack i{display:block;height:100%;background:var(--gold);border-radius:8px}
+.search{max-width:1240px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search input{flex:1 1 260px;font:16px "Noto Sans KR",sans-serif;min-height:50px;border-radius:999px;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:0 22px}
+.search input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#results{max-width:1240px;margin:14px auto 0}
+.res{background:var(--card);border-radius:22px;padding:16px 20px}
+.res .row{grid-template-columns:54px minmax(0,1fr) auto}
+.where{font-size:12px;font-weight:700;color:#fff;background:var(--c);border-radius:6px;padding:1px 7px;margin-right:6px;white-space:nowrap}
+.sec h2{font:400 clamp(28px,3.6vw,40px)/1.1 "Black Han Sans",sans-serif;margin:0 0 6px}
+.sec .lede{margin:0 0 20px;color:var(--sub)}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:14px}
+.fact{border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden;min-height:170px;display:flex;flex-direction:column;justify-content:space-between}
+.fact small{font-weight:700;opacity:.9;font-size:13px}
+.fact strong{font:400 clamp(30px,3.4vw,40px)/1.05 "Black Han Sans",sans-serif;margin:8px 0}
+.fact p{margin:0;font-size:14px;line-height:1.45;opacity:.95}
+.fact::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.14)}
+.faq details{background:var(--card);border-radius:18px;margin-bottom:10px;box-shadow:0 1px 0 var(--line)}
+.faq summary{cursor:pointer;list-style:none;padding:18px 54px 18px 20px;font-weight:700;font-size:16px;position:relative;min-height:44px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-size:20px}
+.faq details[open] summary::after{content:"−"}
+.faq summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:18px}
+.faq .a{padding:0 20px 18px;color:var(--sub);max-width:80ch}
+.faq .a b{color:var(--ink)}
+
+html{scroll-padding-top:80px}:root.app{scroll-padding-top:170px}
+.dsub{font-weight:500;opacity:.85}
+.skip{position:absolute;left:-9999px;top:8px;z-index:60;background:#fff;color:#000;padding:10px 14px;border-radius:10px;font-weight:700}
+.skip:focus{left:8px}
+.mini{position:fixed;left:0;right:0;top:0;z-index:40;background:var(--c);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.18);transform:translateY(-110%);transition:transform .25s}
+.mini.on{transform:none}
+.mini-in{max-width:1240px;margin:0 auto;display:flex;gap:10px;align-items:center;padding:8px max(5vw,12px)}
+.mini-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;scroll-snap-type:x proximity}
+.mini-tabs::-webkit-scrollbar{display:none}
+.mini .tab{min-height:40px;padding:0 14px;font-size:14px;white-space:nowrap;flex:none;box-shadow:none;scroll-snap-align:start}
+.mini .tab[aria-selected=true]{box-shadow:none}
+.mini-seg{display:flex;background:rgba(0,0,0,.22);border-radius:999px;padding:3px;flex:none}
+.mini-seg button{appearance:none;border:0;cursor:pointer;font:700 13px "Noto Sans KR",sans-serif;min-height:38px;padding:0 12px;border-radius:999px;background:transparent;color:#fff;white-space:nowrap}
+.mini-seg button[aria-pressed=true]{background:var(--gold);color:#2a1a00}
+.share{appearance:none;border:2px solid rgba(255,255,255,.7);background:transparent;color:#fff;cursor:pointer;font:700 14px "Noto Sans KR",sans-serif;min-height:44px;padding:0 16px;border-radius:999px;margin-top:14px}
+.share:hover{background:rgba(255,255,255,.15)}
+.totop{position:fixed;right:16px;bottom:18px;z-index:45;width:50px;height:50px;border-radius:50%;border:0;cursor:pointer;background:var(--c);color:#fff;font-size:22px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.totop.on{opacity:1;pointer-events:auto}
+.share:focus-visible,.totop:focus-visible,.mini-seg button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:600px){.mini-seg button{padding:0 9px;font-size:12px}.dsub{display:block}}
+@media(prefers-reduced-motion:reduce){.mini{transition:none}}
+
+.sitenav{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:flex-end;position:relative;margin:-8px 0 10px;font-size:14px;font-weight:700}
+.sitenav a{color:#fff;text-decoration:none;opacity:.9;min-height:32px;display:inline-flex;align-items:center}
+.sitenav a:hover{opacity:1;text-decoration:underline}
+.adband{padding-top:18px!important;padding-bottom:0!important}
+.adslot{max-width:1240px;margin:0 auto;text-align:center}
+.adslot:empty{display:none}
+.adslot .adlabel{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;letter-spacing:.02em}
+.adslot ins{margin:0 auto}
+.postcard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--card);border-radius:22px;padding:22px 24px;text-decoration:none;color:inherit;box-shadow:0 1px 0 var(--line);border-left:6px solid var(--c)}
+.postcard:hover{box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(0,0,0,.35)}
+.postcard small{color:var(--c);font-weight:700}
+.postcard strong{display:block;font-size:clamp(19px,2.2vw,24px);line-height:1.3;margin:4px 0 6px}
+.postcard p{margin:0;color:var(--sub)}
+.postcard .go{margin:0}
+.postmore{margin:12px 4px 0;font-weight:700}
+.postmore a{color:var(--c)}
+.fbot{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.flinks{margin:10px 0 4px}.flinks a{color:var(--ink)}
+.fop{margin:0;font-size:13px}
+@media(max-width:600px){.postcard{grid-template-columns:minmax(0,1fr)}.sitenav{justify-content:flex-start;margin:0 0 10px}}
+
+.lang{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:700}
+.langsel{font:700 14px "Noto Sans KR",sans-serif;min-height:36px;border-radius:999px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:#fff;padding:0 10px;cursor:pointer}
+.langsel option{color:#111;background:#fff}
+.langsel:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.mini-lang .langsel{min-height:34px;font-size:13px}
+:root:not([lang=ko]) h1,:root:not([lang=ko]) .stage h2,:root:not([lang=ko]) .sec h2,:root:not([lang=ko]) .bh h3,:root:not([lang=ko]) .rk,:root:not([lang=ko]) .vv strong,:root:not([lang=ko]) .step .n,:root:not([lang=ko]) .block,:root:not([lang=ko]) .fact strong,:root:not([lang=ko]) footer h4,:root:not([lang=ko]) .api h3{font-family:"Noto Sans","Noto Sans SC","Noto Sans JP","Noto Sans KR",system-ui,sans-serif;font-weight:900;letter-spacing:-.01em}
+:root[lang=zh-CN] body{font-family:"Noto Sans SC","Noto Sans KR",system-ui,sans-serif}
+:root[lang=ja] body{font-family:"Noto Sans JP","Noto Sans KR",system-ui,sans-serif}
+:root[lang=ru] body,:root[lang=es] body,:root[lang=fr] body,:root[lang=en] body{font-family:"Noto Sans","Noto Sans KR",system-ui,sans-serif}
+@media(max-width:600px){.mini-lang{display:none}}
+
+/* ===== 앱 화면 (휴대폰·설치 앱) ===== */
+.applogo,.appinstall,.boardseg,.tabbar{display:none}
+.offline{background:#2b2b2b;color:#fff;text-align:center;font-size:14px;font-weight:700;padding:8px 12px}
+.installcard{display:grid;grid-template-columns:48px minmax(0,1fr) auto 36px;gap:12px;align-items:center;background:var(--card);margin:14px max(4vw,12px) 0;padding:12px 14px;border-radius:18px;box-shadow:0 10px 30px -18px rgba(0,0,0,.4)}
+.installcard[hidden]{display:none}
+.installcard img{border-radius:12px}
+.installcard strong{display:block;font-size:15px;line-height:1.3}
+.installcard p{margin:2px 0 0;font-size:13px;color:var(--sub)}
+.installcard .btn{min-height:40px;padding:0 14px;font-size:14px}
+.x2{appearance:none;border:0;background:transparent;font-size:22px;color:var(--sub);cursor:pointer;width:36px;height:36px}
+:root.app body{padding-top:calc(108px + env(safe-area-inset-top));padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+:root.app .mini{transform:none!important;padding-top:env(safe-area-inset-top);box-shadow:0 4px 16px rgba(0,0,0,.16)}
+:root.app .mini-in{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"logo inst lang" "tabs tabs tabs";gap:8px 8px;padding:8px 12px 10px}
+:root.app .applogo{display:block;grid-area:logo;color:#fff;text-decoration:none;font:400 22px/1 "Black Han Sans",sans-serif;white-space:nowrap}
+:root.app:not([lang=ko]) .applogo{font-family:"Noto Sans","Noto Sans SC","Noto Sans JP",sans-serif;font-weight:900;font-size:19px}
+:root.app .applogo b{color:var(--gold);font-weight:inherit}
+:root.app .appinstall:not([hidden]){display:inline-flex;grid-area:inst;justify-self:start;align-items:center;min-height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--gold);color:#3a2600;font:700 13px "Noto Sans KR",sans-serif;cursor:pointer}
+:root.app .mini-lang{display:inline-flex;grid-area:lang}
+:root.app .mini-lang .langsel{min-height:32px;max-width:96px;font-size:12px;padding:0 6px}
+:root.app .mini-seg{display:none}
+:root.app .mini-seg button{min-height:32px;padding:0 10px;font-size:12px}
+:root.app .mini-tabs{grid-area:tabs}
+:root.app .mini .tab{min-height:36px;padding:0 14px;font-size:14px}
+:root.app .sitenav,:root.app .hero #tabs,:root.app .hero h1,:root.app .skip,:root.app .totop{display:none!important}
+:root.app .hero{padding-top:14px;padding-bottom:18px}
+:root.app .top{justify-content:flex-start}
+:root.app .date{font-size:12px;padding:5px 10px}
+:root.app .hero #seg{margin-top:12px}
+:root.app .hero #seg button{min-height:40px;padding:0 18px;font-size:14px}
+:root.app body{padding-top:var(--appbar,calc(100px + env(safe-area-inset-top)))}
+:root.app .boardseg{top:var(--appbar,calc(100px + env(safe-area-inset-top)))}
+:root.app .stage{margin-top:12px;gap:10px}
+:root.app .stage h2{font-size:26px;margin-bottom:6px}
+:root.app .stage p{font-size:14px}
+:root.app .share{min-height:38px;font-size:13px;margin-top:10px}
+:root.app .pod{min-height:210px}
+:root.app .block{font-size:30px}
+:root.app .mile{margin-top:12px}
+:root.app .mchip{font-size:13px;padding:8px 12px}
+:root.app .boardseg{display:flex;position:sticky;top:calc(108px + env(safe-area-inset-top));z-index:30;margin:14px max(4vw,12px) 0;background:var(--card);border-radius:999px;padding:4px;box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
+:root.app .boardseg button{flex:1;appearance:none;border:0;background:transparent;min-height:42px;border-radius:999px;font:700 15px "Noto Sans KR",sans-serif;color:var(--sub);cursor:pointer}
+:root.app .boardseg button[aria-selected=true]{background:var(--c);color:#fff}
+:root.app #boards{padding-top:12px}
+:root.app #boards .wrap{grid-template-columns:minmax(0,1fr)}
+:root.app #boards[data-show=daily] .board:nth-child(2),:root.app #boards[data-show=total] .board:nth-child(1){display:none}
+:root.app .board{border-radius:18px;padding:14px 12px}
+:root.app .band{padding-left:max(4vw,12px);padding-right:max(4vw,12px)}
+:root.app .tabbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px -14px rgba(0,0,0,.35)}
+:root.app .tabbar button{appearance:none;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;justify-content:center;font:700 11px "Noto Sans KR",sans-serif;color:var(--sub);cursor:pointer;border-radius:12px}
+:root.app .tabbar svg{width:24px;height:24px;fill:currentColor}
+:root.app .tabbar button[aria-current=page]{color:var(--c)}
+:root.app .tabbar button:focus-visible,:root.app .boardseg button:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+:root.app .modal{padding:0;place-items:end center}
+:root.app .mbox{border-radius:20px 20px 0 0;width:100%;padding-bottom:env(safe-area-inset-bottom)}
+:root.app html{scroll-padding-top:170px}
+@media(display-mode:standalone){.installcard,.appinstall{display:none!important}}
+</style>
+</head>
+<body data-p="total">
+<a class="skip" href="#h-daily">순위 바로 보기</a>
+<div class="mini" id="mini" aria-hidden="true">
+  <div class="mini-in">
+    <a class="applogo" href="#total-global" aria-label="오늘의 1위">오늘의 <b>1위</b></a>
+    <button class="appinstall" id="appinstall" type="button" hidden>앱 설치</button>
+    <div class="mini-tabs"><button class="tab" tabindex="-1" data-p="total">종합</button>
+      <button class="tab" tabindex="-1" data-p="inf">인플루언서</button>
+      <button class="tab" tabindex="-1" data-p="music">음악</button>
+      <button class="tab" tabindex="-1" data-p="kids">키즈</button>
+      <button class="tab" tabindex="-1" data-p="ad">광고·영화·드라마</button>
+      <button class="tab" tabindex="-1" data-p="society">사회 (정치·경제 포함)</button>
+      <button class="tab" tabindex="-1" data-p="sports">스포츠</button></div>
+    <label class="lang mini-lang">🌐<select class="langsel" id="langsel2" aria-label="Language"></select></label>
+    <div class="mini-seg"><button data-r="global" tabindex="-1">🌍 전세계</button><button data-r="kr" tabindex="-1">🇰🇷 South Korea</button></div>
+  </div>
+</div>
+<header class="hero band">
+  <div class="wrap">
+    <nav class="sitenav" aria-label="사이트"><a href="posts/" data-keep-lang>오늘의 해설</a><a href="about.html" data-keep-lang>소개</a><a href="privacy.html" data-keep-lang>개인정보처리방침</a><label class="lang">🌐<select class="langsel" id="langsel" aria-label="Language"></select></label></nav>
+    <div class="top">
+      <h1>오늘의 <span>1위</span></h1>
+      <div class="date" id="today"></div>
+    </div>
+    <nav id="tabs" role="tablist" aria-label="분야">
+      <button class="tab" role="tab" data-p="total"><span class="dot"></span>종합</button>
+      <button class="tab" role="tab" data-p="inf"><span class="dot"></span>인플루언서</button>
+      <button class="tab" role="tab" data-p="music"><span class="dot"></span>음악</button>
+      <button class="tab" role="tab" data-p="kids"><span class="dot"></span>키즈</button>
+      <button class="tab" role="tab" data-p="ad"><span class="dot"></span>광고·영화·드라마</button>
+      <button class="tab" role="tab" data-p="society"><span class="dot"></span>사회 (정치·경제 포함)</button>
+      <button class="tab" role="tab" data-p="sports"><span class="dot"></span>스포츠</button>
+    </nav>
+    <div class="seg" id="seg" role="group" aria-label="지역">
+      <button data-r="global">🌍 전세계</button>
+      <button data-r="kr">🇰🇷 South Korea</button>
+    </div>
+    <div class="stage">
+      <div>
+        <h2 id="title">유튜브 동영상 · 전세계</h2>
+        <p id="lead"></p>
+        <button class="share" id="share" type="button">🔗 이 순위 링크 복사</button>
+      </div>
+      <div class="pod" id="pod"></div>
+    </div>
+    <div class="mile" id="mile" aria-live="polite"></div>
+  </div>
+</header>
+
+<section class="band" style="padding-bottom:0" aria-label="검색">
+  <div class="search">
+    <input id="q" type="search" placeholder="🔎 영상·채널 이름으로 전체 순위 검색 (예: 블랙핑크, MrBeast, 김프로) — 단축키 /" autocomplete="off" aria-label="전체 순위 검색">
+  </div>
+  <div id="results"></div>
+</section>
+<div class="band adband"><div class="adslot" data-slot="top"></div></div>
+
+<div class="offline" id="offline" hidden>오프라인 상태입니다. 마지막으로 받은 순위를 보여 드려요.</div>
+<div class="installcard" id="installcard" hidden>
+  <img src="icons/icon-192.png" alt="" width="48" height="48">
+  <div><strong>오늘의 1위를 앱으로 설치</strong><p id="installtext">홈 화면에 추가해 앱처럼 쓰세요.</p></div>
+  <button class="btn" id="installgo" type="button">앱 설치</button>
+  <button class="x2" id="installno" type="button" aria-label="닫기">×</button>
+</div>
+<div class="boardseg" id="boardseg" role="tablist" aria-label="순위 종류"><button type="button" data-b="daily" aria-selected="true">실시간</button><button type="button" data-b="total" aria-selected="false">누적</button></div>
+<main class="band" id="boards" data-show="daily">
+  <div class="wrap">
+    <section class="board" aria-labelledby="h-daily">
+      <div class="bh"><h3 id="h-daily"><span class="live"></span>실시간 조회수 순위</h3><span class="pill">최근 24시간</span><span class="pill sum" id="dsum"></span></div>
+      <p class="asof" id="daily-asof"></p>
+      <div class="trend" id="trendbar"></div>
+      <div id="daily"></div>
+    </section>
+    <section class="board" aria-labelledby="h-total">
+      <div class="bh"><h3 id="h-total">누적 조회수 순위</h3><span class="pill t">역대 전체</span><span class="pill sum" id="tsum"></span></div>
+      <p class="asof" id="total-asof"></p>
+      <div id="total"></div>
+    </section>
+  </div>
+</main>
+
+<div class="band adband"><div class="adslot" data-slot="mid"></div></div>
+<section class="band sec" aria-labelledby="h-post" id="postsec">
+  <div class="wrap">
+    <h2 id="h-post">오늘의 해설</h2>
+    <p class="lede">순위표 뒤에 숨은 이야기를 매일 짧게 정리합니다.</p>
+    <div id="postbox"></div>
+  </div>
+</section>
+<section class="band sec" aria-labelledby="h-facts" id="factsec">
+  <div class="wrap">
+    <h2 id="h-facts">알고 계셨나요? 기록 모음</h2>
+    <p class="lede">순위표만으로는 알 수 없는, 사람들이 가장 많이 묻는 기록들입니다.</p>
+    <div class="facts">
+      <div class="fact" style="background:linear-gradient(135deg,#ff1f3d,#ff7a59)"><small>역대 최다 조회수 영상</small><strong>172.8억 회</strong><p>핑크퐁 ‘아기상어 체조’(South Korea). 2026년 8월 30일 기준이며 2위보다 약 79억 회 많습니다.</p></div>
+      <div class="fact" style="background:linear-gradient(135deg,#e1306c,#ffb340)"><small>좋아요가 가장 많은 영상</small><strong>5,880만 개</strong><p>MrBeast 쇼츠 ‘Would You Fly To Paris For A Baguette?’(47초). 2025년 1월 ‘Despacito’를 넘어섰습니다.</p></div>
+      <div class="fact" style="background:linear-gradient(135deg,#00a99a,#4b8bff)"><small>구독자 1위 채널</small><strong>5억 2,700만</strong><p>MrBeast(2026.11.18). 2위 T-Series(3억 1,600만)와 2억 명 넘게 차이 납니다.</p></div>
+      <div class="fact" style="background:linear-gradient(135deg,#7b2ff7,#ff4fa0)"><small>South Korea 구독자 1위</small><strong>1억 3,500만</strong><p>김프로KIMPRO. 2025년 한 해 약 775억 회로 전 세계 채널 연간 조회수 1위를 차지했습니다.</p></div>
+      <div class="fact" style="background:linear-gradient(135deg,#ff5a1f,#ffc83d)"><small>2026년 가장 빨리 1억 뷰 돌파한 뮤직비디오</small><strong>약 2일 4시간</strong><p>BLACKPINK 리사 ‘SaWaDiKa’. 2026년 9월 4일 공개 후 9월 6일 오후 1억 뷰를 넘었습니다.</p></div>
+      <div class="fact" style="background:linear-gradient(135deg,#1b8a5a,#00c2a8)"><small>유튜브 최초 10억 뷰</small><strong>강남스타일</strong><p>PSY의 2012년 뮤직비디오가 유튜브 역사상 처음으로 10억 뷰를 넘었고, 지금은 60.5억 회입니다.</p></div>
+    </div>
+  </div>
+</section>
+<section class="band sec faq" aria-labelledby="h-faq" id="faqsec" style="padding-top:0">
+  <div class="wrap">
+    <h2 id="h-faq">자주 묻는 질문</h2>
+    <p class="lede">순위를 보다 보면 생기는 궁금증을 모았습니다.</p>
+    <details><summary>실시간 조회수와 누적 조회수는 뭐가 달라요?</summary><div class="a"><b>실시간</b>은 최근 하루 동안 늘어난 조회수라 ‘오늘 뜨는 영상’을 보여 줍니다. <b>누적</b>은 영상이 올라온 뒤 지금까지 쌓인 전체 조회수라 ‘역대 기록’입니다. 그래서 두 목록에 나오는 영상이 서로 다릅니다.</div></details>
+    <details><summary>광고·영화·드라마는 왜 따로 모았나요?</summary><div class="a">기업이 유튜브 광고로 내보낸 영상은 광고로 재생된 횟수도 조회수에 잡힐 수 있어서, 광고비를 많이 쓴 영상이 하루 수천만 회씩 오르며 일간 차트를 차지합니다. 사람들이 스스로 찾아 본 영상과 섞이지 않도록 광고·영화 예고편·드라마·공공기관 홍보는 <b>‘광고·영화·드라마’ 메뉴</b>에 따로 모았고, ‘종합’ 순위에서는 뺐습니다.</div></details>
+    <details><summary>쇼츠 조회수는 어떻게 세나요?</summary><div class="a">2025년 3월 31일부터 쇼츠는 <b>재생이 시작되거나 반복 재생될 때마다</b> 조회수 1회로 셉니다. 예전처럼 몇 초 이상 봐야 한다는 조건이 없어져 조회수가 크게 늘었습니다. 크리에이터 수익은 기존 방식의 ‘참여 조회수(engaged views)’로 따로 계산합니다.</div></details>
+    <details><summary>왜 어린이 영상이 상위권을 휩쓸어요?</summary><div class="a">누적 TOP 10 중 절반(5편)이 동요·키즈 영상입니다. 아이들은 같은 영상을 여러 번 반복해서 보고, 노래가 언어 장벽 없이 전 세계에서 재생되기 때문에 수년에 걸쳐 조회수가 계속 쌓입니다.</div></details>
+    <details><summary>인스타 릴스는 왜 실시간 순위가 없어요?</summary><div class="a">인스타그램은 게시물별 누적 재생수만 보여 주고, 일간 조회수나 공개 API를 제공하지 않습니다. 그래서 릴스는 기준일의 누적 순위만 보여 드립니다.</div></details>
+    <details><summary>순위는 얼마나 자주 바뀌나요?</summary><div class="a"><b>순위 목록</b>은 매일 0시(한국 시간)에 새 차트로 바뀝니다. <b>유튜브 조회수</b>는 운영자 서버가 약 30분마다 YouTube 공식 API로 받아 두고, 화면에는 그 값이 ‘LIVE’ 표시와 함께 나옵니다. 인스타그램은 공개 API가 없어 기준일 값 그대로입니다.</div></details>
+    <details><summary>순위는 어떻게 매기나요?</summary><div class="a">메뉴마다 유튜브 동영상·쇼츠·인스타 릴스를 <b>플랫폼 구분 없이 합쳐 조회수 순</b>으로 정렬했습니다. 목록 위의 ‘합계’는 그 목록에 있는 영상 조회수를 모두 더한 값입니다. ‘종합’은 광고를 뺀 모든 분야 영상을 합친 상위 10편입니다. 채널 전체 조회수 순위는 영상과 단위가 달라 섞지 않고 따로 표시했습니다.</div></details>
+    <details><summary>왜 이 사이트의 순위와 ‘차트 ○위’가 다른가요?</summary><div class="a">영상 옆에 적힌 <b>‘차트 ○위’</b>는 원래 출처(Playboard·kworb)의 전체 차트에서의 순위이고, 왼쪽의 큰 숫자는 <b>이 메뉴 안에서 다시 매긴 순위</b>입니다. 두 순위가 달라지는 이유는 네 가지입니다.<br><br>
+<b>1. 분야별로 골라 냈기 때문입니다.</b> 원래 차트에는 광고·뉴스·음악·키즈가 모두 섞여 있습니다. 예를 들어 음악 메뉴는 그중 뮤직비디오만 골라서 다시 1위부터 매기므로, 전체 차트 9위였던 나연 ‘BABY ANGEL’이 음악 메뉴에서는 1위가 됩니다.<br>
+<b>2. 플랫폼을 합쳐 다시 정렬했기 때문입니다.</b> 유튜브 동영상 차트, 쇼츠 차트, 인스타 릴스 목록은 서로 다른 차트입니다. 이 사이트는 이들을 한 목록으로 합쳐 조회수 순으로 다시 줄 세웠기 때문에, 미국 쇼츠 차트 4위였던 필라델피아 필리스 야구 쇼츠가 스포츠 메뉴에서는 1위가 되기도 합니다.<br>
+<b>3. 출처마다 집계 범위가 다르기 때문입니다.</b> Playboard South Korea 차트는 국내에서 본 하루 조회수를, kworb 차트는 전 세계에서 본 24시간 조회수를 셉니다. 그래서 같은 영상도 출처에 따라 조회수가 다릅니다(나연 ‘BABY ANGEL’: South Korea 299만, 전세계 352만).<br>
+<b>4. 집계 시각과 날짜가 다르기 때문입니다.</b> 차트마다 하루를 끊는 시각이 다르고, 일부 채널 차트는 기준일이 다릅니다(뉴스·시사 채널은 11월 5일). 각 목록 위에 적힌 기준일을 함께 확인해 주세요.</div></details>
+    <details><summary>‘사회’ 메뉴에는 무엇이 들어가나요?</summary><div class="a">정치·경제·사회 뉴스와 시사를 모두 담았습니다. 유튜브와 Playboard는 이 분야를 ‘뉴스·정치’ 한 분류로 묶어 보여 주기 때문에 한 메뉴로 합쳤습니다. 공개된 역대 순위가 없어서 누적 칸은 거의 비어 있습니다.</div></details>
+    <details><summary>‘인플루언서’ 메뉴에는 어떤 채널이 들어가요?</summary><div class="a">전세계는 브랜드·키즈 채널을 뺀 <b>개인 크리에이터</b>의 영상입니다. South Korea 실시간은 채널 전체의 하루 조회수 순위에서 뉴스·공공기관·광고 채널을 뺀 TOP 10이며, 음악 채널(아이돌·레이블)은 포함합니다.</div></details>
+  </div>
+</section>
+<nav class="tabbar" id="tabbar" aria-label="앱 메뉴">
+  <button type="button" data-go="top" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Zm-3 1h3v2a3 3 0 0 1-3-2Zm16 0h-3v2a3 3 0 0 0 3-2ZM10 13h4v3h-4zM8 17h8v3H8z"/></svg><span>순위</span></button>
+  <button type="button" data-go="search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.4 4.4-1.4 1.4-4.4-4.4A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/></svg><span>검색</span></button>
+  <button type="button" data-go="postsec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5V4Zm3 5h8v2H8V9Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z"/></svg><span>해설</span></button>
+  <button type="button" data-go="factsec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7L12 3Z"/></svg><span>기록</span></button>
+  <button type="button" data-go="faqsec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm-1 8v6h2v-6h-2Zm0-4v2h2V7h-2Z"/></svg><span>정보</span></button>
+</nav>
+<button class="totop" id="totop" type="button" aria-label="맨 위로">↑</button>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="mbox" id="mbox">
+    <div class="frame" id="frame"></div>
+    <div class="mbar"><strong id="mtitle"></strong><a id="mopen" href="#" target="_blank" rel="noopener">유튜브에서 보기 ↗</a><button class="x" id="mclose" aria-label="닫기">×</button></div>
+  </div>
+</div>
+<footer class="band">
+  <div class="wrap">
+    <h4>데이터 기준과 출처</h4>
+    <ul>
+      <li><b>순위 방식</b>: 유튜브 동영상·쇼츠·인스타 릴스를 합쳐 조회수 순으로 정렬. ‘합계’는 목록에 있는 조회수를 모두 더한 값입니다.</li>
+      <li><b>실시간</b> = 하루(24시간) 동안 늘어난 조회수 (Playboard 일간 차트, 2026.11.24~25). South Korea 뉴스·시사 채널 차트는 2026.11.05 기준입니다. South Korea 음악 실시간은 kworb 전세계 24시간 차트(2026.11.25)입니다.</li>
+      <li><b>누적</b> = 업로드 이후 전체 조회수. 각 목록 위에 기준일을 적었고 "+"는 그 시점 돌파 기록입니다.</li>
+      <li><b>종합</b>: 광고·영화·드라마·공공 홍보를 뺀 모든 분야의 영상 상위 10편. 채널 단위 순위는 넣지 않았습니다.</li>
+      <li><b>광고·영화·드라마</b>: 브랜드 광고, 유료 협찬, 영화 예고편, 드라마, 공공기관 홍보를 모았습니다.</li>
+      <li><b>사회</b>: 정치·경제·사회 뉴스와 시사를 합친 메뉴입니다 (Playboard ‘뉴스·정치’ 차트).</li>
+      <li>영상을 누르면 페이지 안 플레이어로 재생됩니다. 유튜브 조회수와 ‘종합’ 메뉴의 인기 급상승 목록은 서버가 약 30분마다 자동 갱신합니다.</li>
+      <li>출처: Playboard, kworb, Wikipedia(유튜브·릴스 최다 조회수 목록), aifreeforever 쇼츠 차트, 기네스, 각 소속사·언론 발표.</li>
+    </ul>
+  </div>
+  <div class="wrap fbot">
+    <div class="adslot" data-slot="bottom"></div>
+    <p class="flinks"><a href="posts/" data-keep-lang>오늘의 해설</a> · <a href="about.html" data-keep-lang>소개</a> · <a href="privacy.html" data-keep-lang><b>개인정보처리방침</b></a></p>
+    <p class="fop" id="fop"></p>
+  </div>
+</footer>
+
+<script src="site.config.js"></script>
+<script src="data/rankings.js"></script>
+<script src="data/live.js"></script>
+<script src="data/posts.js"></script>
+<script src="i18n/source.js"></script>
+<script src="i18n/en.js"></script>
+<script src="i18n/zh.js"></script>
+<script src="i18n/ja.js"></script>
+<script src="i18n/es.js"></script>
+<script src="i18n/fr.js"></script>
+<script src="i18n/ru.js"></script>
+<script>
+{
+const D=window.RANKINGS||{};
+
+const SITE=window.SITE||{};const HOSTED=SITE.embedPlayer!==false;
+/* ---- 다국어 ---- */
+const LANGS={ko:"한국어",en:"English",zh:"中文",ja:"日本語",es:"Español",fr:"Français",ru:"Русский"};
+const LOC={ko:"ko-KR",en:"en-US",zh:"zh-CN",ja:"ja-JP",es:"es-ES",fr:"fr-FR",ru:"ru-RU"};
+let LANG=(()=>{const q=new URLSearchParams(location.search).get("lang");if(q&&LANGS[q])return q;try{const s=localStorage.getItem("lang");if(s&&LANGS[s])return s}catch(e){}const n=(navigator.language||"en").slice(0,2).toLowerCase();return LANGS[n]?n:"en"})();
+const buildMap=l=>{const m=new Map(),S=window.I18N_SRC||{},L=(window.I18N||{})[l]||{};for(const k of ["ui","data"])(S[k]||[]).forEach((s,i)=>{const v=(L[k]||[])[i];if(v)m.set(s,v)});return m};
+let TM=new Map(),TE=new Map();
+const setMaps=()=>{TM=LANG==="ko"?new Map():buildMap(LANG);TE=LANG==="ko"||LANG==="en"?new Map():buildMap("en")};
+const HANGUL=/[가-힣]/;
+const T1=s=>{if(TM.has(s))return TM.get(s);if(TE.has(s))return TE.get(s);
+ const nums=[];const q=s.replace(/\d+(?:[.,:]\d+)*/g,m=>{nums.push(m);return "{#}"});
+ const v=TM.get(q)??TE.get(q);if(v!=null){let i=0;return v.replace(/\{#\}/g,()=>nums[i++]??"")}return null};
+const T=s=>{if(LANG==="ko"||s==null||!HANGUL.test(s))return s;
+ const w=T1(s);if(w!=null)return w;
+ const m=s.match(/^([^()]*[가-힣][^()]*?)\s*\(([^()]*[A-Za-z][^()]*)\)$/);if(m&&!HANGUL.test(m[2]))return m[2];
+ const m2=s.match(/^([^()]*[A-Za-z][^()]*?)\s*\(([^()]*[가-힣][^()]*)\)$/);if(m2&&!HANGUL.test(m2[1]))return m2[1];
+ if(s.includes(" · "))return s.split(" · ").map(p=>{const r=T1(p);return r!=null?r:p}).join(" · ");
+ return s};
+const TF=(s,o)=>T(s).replace(/\{(\w+)\}/g,(_,k)=>o[k]!=null?o[k]:"");
+const LC=()=>LOC[LANG]||"en-US";
+setMaps();
+
+const NAMES={total:"종합",inf:"인플루언서",music:"음악",kids:"키즈",ad:"광고·영화·드라마·공공 홍보",society:"사회 (정치·경제 포함)",sports:"스포츠"};
+const API="https://www.googleapis.com/youtube/v3/";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isVid=id=>!/^[sircu]:/.test(id);
+const url=id=>id.startsWith("s:")?"https://www.youtube.com/results?search_query="+encodeURIComponent(id.slice(2))
+ :id.startsWith("i:")?"https://www.instagram.com/"+id.slice(2)+"/"
+ :id.startsWith("r:")?id.slice(2)
+ :id.startsWith("c:")?"https://www.youtube.com/@"+id.slice(2)
+ :id.startsWith("u:")?"https://www.youtube.com/channel/"+id.slice(2)
+ :"https://www.youtube.com/watch?v="+id;
+const reelCode=id=>{const m=id.match(/\/reel\/([A-Za-z0-9_-]+)/);return m?m[1]:null};
+const fmt=n=>LANG!=="ko"?new Intl.NumberFormat(LC(),{notation:"compact",maximumFractionDigits:1}).format(n):n>=1e8?(Math.round(n/1e7)/10).toLocaleString("ko-KR",{maximumFractionDigits:1})+"억":n>=1e4?Math.round(n/1e4).toLocaleString("ko-KR")+"만":Number(n).toLocaleString("ko-KR");
+const PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const HUES=[[350,20],[18,45],[330,290],[200,170],[45,15],[280,330],[160,200],[10,340],[220,260],[30,350]];
+
+/* ---- 실시간 상태 ---- */
+const KEY="";
+const live={},first={};          // id -> 현재 조회수 / 처음 불러온 조회수
+let trend=null,trendOn=false,lastAt=null,timer=null;
+
+const thumb=(i,id)=>{const h=HUES[i%10];const tag=id.startsWith("i:")||id.startsWith("r:")?"Reels":id.startsWith("c:")||id.startsWith("u:")?T("채널"):"▶ YT";
+ const img=HOSTED&&isVid(id)?`<img src="https://i.ytimg.com/vi/${esc(id)}/mqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">`:"";
+ return `<span class="th" style="background:linear-gradient(135deg,hsl(${h[0]} 90% 58%),hsl(${h[1]} 95% 48%))">${img}${PLAY}<b>${tag}</b></span>`};
+
+const value=(it,kind)=>{kind=kind[0];const id=it[3],L=live[id];
+ if(kind==="t"&&L!=null)return {big:fmt(L),sub:T("누적 조회")+'<span class="livetag">LIVE</span>',d:L-first[id]};
+ return {big:fmt(it[2])+(it[4]?"+":""),sub:kind==="d"?T("하루 조회"):T("누적 조회"),d:L!=null?L-first[id]:null}};
+
+const list=(blk,kind)=>list1(blk,kind)+(blk.extra?`<h4 class="xh">${esc(T(blk.extra.title))}</h4>`+list1(blk.extra,kind+"x"):"");
+const list1=(blk,kind)=>{
+ if(!blk.items.length){const e=blk.empty;return `<div class="empty"><strong>${esc(T(e[0]))}</strong>${esc(T(e[1]))}<br><a class="go" href="${esc(e[2])}" target="_blank" rel="noopener">${esc(T(e[3]))} ↗</a></div>`}
+ const K=kind[0];
+ const max=Math.max(...blk.items.map(it=>K==="t"&&live[it[3]]!=null?live[it[3]]:it[2]));
+ return `<ol>${blk.items.map((it,i)=>{const v=value(it,K),n=K==="t"&&live[it[3]]!=null?live[it[3]]:it[2];
+  return `<li><a class="row" href="${esc(url(it[3]))}" target="_blank" rel="noopener" data-k="${kind}" data-i="${i}" aria-label="${esc(TF("{n}위 {t} 재생",{n:i+1,t:T(it[0])}))}">
+  <span class="rk">${i+1}</span>${thumb(i,it[3])}
+  <span><span class="tt">${esc(T(it[0]))}</span><span class="ch">${esc(T(it[1]))}</span><span class="bar"><i style="width:${Math.max(4,n/max*100).toFixed(1)}%"></i></span></span>
+  <span class="vv"><strong>${v.big}</strong><small>${v.sub}</small>${v.d?`<span class="delta">▲ ${Number(v.d).toLocaleString(LC())} ${T("(열어둔 뒤)")}</span>`:""}<span class="play">${/^[uc]:/.test(it[3])?T("채널 보기 ↗"):/^[is]:/.test(it[3])?T("열기 ↗"):T("▶ 재생")}</span></span></a></li>`}).join("")}</ol>${blk.note?`<p class="note">${esc(T(blk.note))}</p>`:""}`};
+
+const podium=d=>{
+ const src=d.total.items.length>=3?d.total:d.daily.items.length>=3?d.daily:d.total.items.length?d.total:d.daily;
+ const it=src.items.slice(0,3);if(!it.length)return `<div class="pod-empty">${T("오늘의 순위를 준비 중이에요")}</div>`;
+ const kind=src===d.daily?"d":"t",max=it[0][2];
+ const order=it.length===3?[1,0,2]:it.map((_,i)=>i);
+ const sc=document.documentElement.classList.contains("app")?.6:1;
+ return order.map(i=>{const x=it[i],v=value(x,kind),h=Math.round((i===0?230:Math.max(70,60+170*x[2]/max))*sc);
+  return `<a class="step s${i+1}" href="${esc(url(x[3]))}" target="_blank" rel="noopener" data-k="${kind}" data-i="${i}" data-pod="1"><span class="who">${esc(T(x[0]))}</span><span class="n">${kind==="d"?T("하루"):T("누적")} ${v.big}</span><span class="block" style="height:${h}px;animation-delay:${i*.12}s">${i+1}</span></a>`}).join("")};
+
+const NAMES2={total:"종합",inf:"인플루언서",music:"음악",kids:"키즈",ad:"광고",society:"사회",sports:"스포츠"};
+const stepOf=n=>n>=1e10?1e9:n>=1e9?1e8:n>=1e8?1e7:1e6;
+const mile=d=>{const out=[];
+ for(const [blk,kind] of [[d.total,"t"],[d.daily,"d"]]){const it=blk.items[0];if(!it)continue;
+  const n=kind==="t"&&live[it[3]]!=null?live[it[3]]:it[2];
+  if(kind==="t"){const st=stepOf(n),next=Math.floor(n/st)*st+st,pct=((n-(next-st))/st*100).toFixed(1);
+   out.push(`<div class="mchip">${TF("🏁 누적 1위 {a} · {b} 뷰까지 {c} 남음",{a:"<b>"+esc(T(it[0]))+"</b>",b:fmt(next),c:"<b>"+fmt(next-n)+"</b>"})}<div class="mtrack"><i style="width:${pct}%"></i></div></div>`)}
+  else if(d.total.items[0]){const t=d.total.items[0][2];
+   out.push(`<div class="mchip">${TF("⚡ 오늘 1위 {a} · 하루 {b}",{a:"<b>"+esc(T(it[0]))+"</b>",b:fmt(n)})}${t>n?TF(" — 이 속도면 누적 1위 기록까지 약 {d}일",{d:Math.ceil(t/n).toLocaleString(LC())}):""}</div>`)}}
+ return out.join("")};
+const ALL=()=>{const r=[];for(const k in D){const [p,reg]=k.split("-");
+ for(const [blk,kind] of [[D[k].daily,"d"],[D[k].total,"t"],[D[k].daily.extra,"dx"],[D[k].total.extra,"tx"]])if(blk)blk.items.forEach((it,i)=>r.push({k,p,reg,kind,i,it}))}return r};
+const search=()=>{const q=document.getElementById("q").value.trim().toLowerCase(),box=document.getElementById("results");
+ if(!q){box.innerHTML="";return}
+ const AL={"블랙핑크":"blackpink","미스터비스트":"mrbeast","미스터 비스트":"mrbeast","싸이":"psy","메시":"messi","bts":"방탄소년단","방탄":"방탄소년단","코코멜론":"cocomelon","핑크퐁":"pinkfong","데스파시토":"despacito","김프로":"kimpro","마크 로버":"mark rober","나연":"nayeon","리사":"lisa","로제":"rosé","제니":"jennie","지수":"jisoo","스트레이 키즈":"stray kids","스키즈":"stray kids","아일릿":"illit","르세라핌":"le sserafim"};
+ const qs=[q];for(const k in AL){if(k.includes(q)||q.includes(k))qs.push(AL[k]);if(AL[k]===q)qs.push(k)}
+ const hits=ALL().filter(x=>{const t=(x.it[0]+" "+x.it[1]+" "+T(x.it[0])+" "+T(x.it[1])).toLowerCase();return qs.some(s=>t.includes(s))}).slice(0,30);
+ box.innerHTML=`<div class="res"><p class="asof">${esc(TF("‘{q}’ 검색 결과 {n}건",{q,n:hits.length}))}${hits.length===30?esc(T(" (상위 30건)")):""}</p>${hits.length?`<ol>${hits.map(x=>`<li><a class="row" href="${esc(url(x.it[3]))}" target="_blank" rel="noopener" data-s="${esc(x.k)}|${x.kind}|${x.i}">${thumb(x.i,x.it[3])}<span><span class="tt">${esc(T(x.it[0]))}</span><span class="ch"><span class="where">${esc(T(NAMES2[x.p]))} · ${esc(T(x.reg==="kr"?"South Korea":"전세계"))} · ${esc(T(x.kind[0]==="d"?"실시간":"누적"))} ${esc(TF("{n}위",{n:x.i+1}))}</span>${esc(T(x.it[1]))}</span></span><span class="vv"><strong>${fmt(x.it[2])}${x.it[4]?"+":""}</strong><small>${x.kind[0]==="d"?T("하루 조회"):T("누적 조회")}</small></span></a></li>`).join("")}</ol>`:`<div class="empty">${T("일치하는 영상이나 채널이 없어요. 다른 이름으로 찾아보세요.")}</div>`}</div>`};
+const isChannel=it=>/^u:/.test(it[3])||/채널 전체/.test(it[0]);
+for(const r of ["global","kr"]){
+ const pick=kind=>{const m=new Map();
+  for(const k in D){if(!k.endsWith("-"+r)||k.startsWith("ad-"))continue;const b=D[k][kind];
+   for(const bb of [b,b.extra])if(bb)for(const it of bb.items){if(isChannel(it))continue;const key=it[3].startsWith("s:")?it[0]:it[3];if(!m.has(key))m.set(key,it)}}
+  return [...m.values()].sort((a,c)=>c[2]-a[2]).slice(0,10)};
+ D["total-"+r]={lead:r==="kr"?"South Korea 영상 전체를 유튜브·쇼츠·릴스 구분 없이 합쳐 조회수 순으로 매긴 종합 순위입니다. 광고·영화·드라마·공공 홍보는 뺐습니다.":"전세계 영상 전체를 유튜브·쇼츠·릴스 구분 없이 합쳐 조회수 순으로 매긴 종합 순위입니다. 광고·영화·드라마·공공 홍보는 뺐습니다.",
+  daily:{asof:"모든 분야 메뉴의 실시간 영상을 합친 순위 (채널 단위 순위 제외)",items:pick("daily")},
+  total:{asof:"모든 분야 메뉴의 누적 영상을 합친 순위 (채널 단위 순위 제외)",items:pick("total")}}}
+let P="total",R="global";
+const cur=()=>D[P+"-"+R];
+const dailyBlock=()=>trendOn&&trend&&P==="total"?trend[R]:cur().daily;
+const render=()=>{
+ const d=cur();document.body.dataset.p=P;
+ document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.p===P));
+ document.querySelectorAll("#seg button,.mini-seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r===R));
+ document.querySelectorAll(".mini .tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.p===P));
+ document.getElementById("title").textContent=T(NAMES[P])+" · "+T(R==="kr"?"South Korea":"전세계");
+ document.getElementById("lead").textContent=T(d.lead);
+ document.getElementById("pod").innerHTML=podium(d);
+ document.getElementById("mile").innerHTML=mile(d);
+ const db=dailyBlock();
+ document.getElementById("daily-asof").textContent=T(db.asof||"공개된 일간 데이터 없음");
+ document.getElementById("total-asof").textContent=T(d.total.asof)+(lastAt?TF(" · 조회수는 {t} 실시간 값",{t:lastAt}):"");
+ const tb=document.getElementById("trendbar");
+ tb.innerHTML=trend&&P==="total"?`<button class="btn ${trendOn?"":"ghost"}" id="tOn">${trendOn?"✓ ":""}${T("유튜브 인기 급상승(실시간 API)")}</button><button class="btn ${trendOn?"ghost":""}" id="tOff">${trendOn?"":"✓ "}${T("Playboard 일간 차트")}</button>`:"";
+ const sum=b=>b.items.reduce((s,it)=>s+(it[2]||0),0);
+ const ds=document.getElementById("dsum"),ts=document.getElementById("tsum");
+ ds.textContent=db.items.length?T("합계")+" "+fmt(sum(db))+(db.items.some(isChannel)?T(" (채널)"):""):"";ds.hidden=!db.items.length;
+ ts.textContent=d.total.items.length?T("합계")+" "+fmt(sum(d.total))+(d.total.items.some(it=>it[4])?"+":""):"";ts.hidden=!d.total.items.length;
+ document.getElementById("daily").innerHTML=list(db,"d");
+ document.getElementById("total").innerHTML=list(d.total,"t");
+};
+
+
+
+/* ---- 재생 팝업 ---- */
+const modal=document.getElementById("modal"),mbox=document.getElementById("mbox"),frame=document.getElementById("frame");
+let lastFocus=null;
+const openPlayer=(it,vert)=>{
+ if(!HOSTED)return false;
+ const id=it[3];let src=null;
+ if(isVid(id))src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1`;
+ else if(id.startsWith("r:")&&reelCode(id))src=`https://www.instagram.com/reel/${reelCode(id)}/embed`;
+ if(!src)return false;
+ lastFocus=document.activeElement;
+ mbox.classList.toggle("vert",!!vert||id.startsWith("r:"));
+ frame.innerHTML=`<iframe src="${esc(src)}" title="${esc(it[0])}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+ document.getElementById("mtitle").textContent=T(it[0])+" — "+T(it[1]);
+ const o=document.getElementById("mopen");o.href=url(id);o.textContent=id.startsWith("r:")?T("인스타그램에서 보기 ↗"):T("유튜브에서 보기 ↗");
+ modal.classList.add("on");document.getElementById("mclose").focus();return true};
+const closePlayer=()=>{modal.classList.remove("on");frame.innerHTML="";if(lastFocus)lastFocus.focus()};
+document.getElementById("mclose").addEventListener("click",closePlayer);
+modal.addEventListener("click",e=>{if(e.target===modal)closePlayer()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal.classList.contains("on"))closePlayer()});
+document.getElementById("q").addEventListener("input",search);
+document.addEventListener("click",e=>{
+ const sa=e.target.closest("a[data-s]");
+ if(sa){const [k,kind,i]=sa.dataset.s.split("|");let b=kind[0]==="d"?D[k].daily:D[k].total;if(kind[1]==="x")b=b.extra;const it=b.items[+i];if(it&&openPlayer(it,/쇼츠|릴스/.test(it[1])))e.preventDefault();return}
+ const a=e.target.closest("a[data-k]");if(!a)return;
+ let blk=a.dataset.k[0]==="d"?dailyBlock():cur().total;if(a.dataset.k[1]==="x")blk=blk.extra;const it=blk&&blk.items[+a.dataset.i];if(!it)return;
+ if(openPlayer(it,/쇼츠|릴스/.test(it[1])))e.preventDefault()});
+
+/* ---- 서버가 받아 둔 실시간 조회수 (data/live.js) ---- */
+{const L=window.LIVE;
+ if(L&&L.updated){
+  for(const [id,n] of Object.entries(L.videos||{})){live[id]=n;first[id]=n}
+  for(const [id,n] of Object.entries(L.channels||{})){live["u:"+id]=n;first["u:"+id]=n}
+  const t=new Date(L.updated).toLocaleString(LC(),{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+  lastAt=t;
+  if(L.trending&&L.trending.kr&&L.trending.kr.length)trend={
+   kr:{asof:TF("{t} 기준 · 유튜브 인기 급상승 South Korea (값은 누적 조회수)",{t}),items:L.trending.kr},
+   global:{asof:TF("{t} 기준 · 유튜브 인기 급상승 (전세계 차트가 없어 미국 기준, 값은 누적 조회수)",{t}),items:L.trending.global||[]}};
+ }}
+document.getElementById("trendbar").addEventListener("click",e=>{if(e.target.id==="tOn"){trendOn=true;render()}if(e.target.id==="tOff"){trendOn=false;render()}});
+
+/* ---- 메뉴 ---- */
+const fromHash=()=>{const m=(location.hash||"").match(/^#(total|inf|music|kids|ad|society|sports)-(global|kr)$/);if(m){P=m[1];R=m[2]}render()};
+const go=()=>{try{history.replaceState(null,"","#"+P+"-"+R)}catch(e){}render()};
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b){P=b.dataset.p;go()}});
+document.getElementById("tabs").addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;const t=[...document.querySelectorAll(".tab")];let i=t.findIndex(b=>b.dataset.p===P);i=(i+(e.key==="ArrowRight"?1:t.length-1))%t.length;P=t[i].dataset.p;go();t[i].focus()});
+document.getElementById("seg").addEventListener("click",e=>{const b=e.target.closest("button");if(b){R=b.dataset.r;go()}});
+window.addEventListener("hashchange",fromHash);
+
+/* ---- 고정 미니 메뉴 · 맨 위로 · 공유 · 단축키 ---- */
+{const mini=document.getElementById("mini"),top=document.getElementById("totop"),hero=document.querySelector(".hero");
+ const setMini=on=>{if(document.documentElement.classList.contains("app"))on=true;mini.classList.toggle("on",on);mini.setAttribute("aria-hidden",!on);mini.querySelectorAll("button").forEach(b=>b.tabIndex=on?0:-1)};
+ if("IntersectionObserver" in window){const io=new IntersectionObserver(es=>{for(const e of es){setMini(!e.isIntersecting);top.classList.toggle("on",!e.isIntersecting)}},{threshold:0});io.observe(hero)}
+ mini.addEventListener("click",e=>{const t=e.target.closest(".tab"),r=e.target.closest("[data-r]");if(t){P=t.dataset.p}else if(r){R=r.dataset.r}else return;go();
+  const sel=mini.querySelector('.tab[aria-selected="true"]');if(sel)sel.scrollIntoView({block:"nearest",inline:"center"});document.getElementById("h-daily").scrollIntoView({block:"start"})});
+ top.addEventListener("click",()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}));
+ const sh=document.getElementById("share");
+ if(sh)sh.addEventListener("click",async()=>{const u=location.href.split("#")[0].split("?")[0]+(LANG!=="ko"?"?lang="+LANG:"")+"#"+P+"-"+R;
+  try{await navigator.clipboard.writeText(u);sh.textContent=T("✓ 링크를 복사했어요")}catch(err){sh.textContent=u}
+  setTimeout(()=>{sh.textContent=T("🔗 이 순위 링크 복사")},2500)});
+ document.addEventListener("keydown",e=>{if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();const q=document.getElementById("q");q.focus();q.scrollIntoView({block:"center"})}});
+}
+
+
+/* ---- 고정 문구 번역 · 언어 선택 ---- */
+const SKIP=new Set(["daily","total","pod","mile","results","postbox","trendbar","fop","title","lead","daily-asof","total-asof","dsum","tsum","today","mtitle","mopen","frame","langsel","langsel2"]);
+const STAT=[];
+(function walk(el){for(const c of el.children){if(SKIP.has(c.id)||/^(SCRIPT|STYLE|SELECT|OPTION)$/.test(c.tagName))continue;
+ const own=[...c.childNodes].some(n=>n.nodeType===3&&HANGUL.test(n.textContent));
+ if(own){STAT.push({el:c,ko:c.innerHTML.trim()})}else walk(c)}})(document.body);
+const ATTR=[];document.querySelectorAll("[placeholder],[aria-label],[title]").forEach(el=>{for(const a of ["placeholder","aria-label","title"]){const v=el.getAttribute(a);if(v&&HANGUL.test(v))ATTR.push({el,a,ko:v})}});
+const META0={title:document.title,desc:(document.querySelector('meta[name=description]')||{}).content||""};
+const FONTS={zh:"Noto+Sans+SC:wght@400;700;900",ja:"Noto+Sans+JP:wght@400;700;900",ru:"Noto+Sans:wght@400;700;900",es:"Noto+Sans:wght@400;700;900",fr:"Noto+Sans:wght@400;700;900",en:"Noto+Sans:wght@400;700;900"};
+const loadFont=l=>{const f=FONTS[l];if(!f||document.getElementById("font-"+l))return;const k=document.createElement("link");k.id="font-"+l;k.rel="stylesheet";k.href="https://fonts.googleapis.com/css2?family="+f+"&display=swap";document.head.appendChild(k)};
+const dateChip=()=>{const M=window.META||{};const el=document.getElementById("today");if(!M.updated){el.textContent="";return}
+ const d=new Date(M.updated+"T00:00:00+09:00");const day=d.toLocaleDateString(LC(),{year:"numeric",month:"long",day:"numeric",weekday:"short",timeZone:"Asia/Seoul"});
+ const f=x=>new Date(x+"T00:00:00+09:00").toLocaleDateString(LC(),{month:"numeric",day:"numeric",timeZone:"Asia/Seoul"});
+ el.innerHTML=esc(day)+' <span class="dsub">'+esc(TF("· 데이터 {a}~{b} 기준",{a:f(M.dataFrom||M.updated),b:f(M.dataTo||M.updated)}))+"</span>"};
+const applyLang=()=>{document.documentElement.lang=LANG==="zh"?"zh-CN":LANG;setMaps();loadFont(LANG);
+ for(const s of STAT)s.el.innerHTML=LANG==="ko"?s.ko:(T1(s.ko)??s.ko);
+ for(const s of ATTR)s.el.setAttribute(s.a,LANG==="ko"?s.ko:(T1(s.ko)??s.ko));
+ document.title=LANG==="ko"?META0.title:(T1(META0.title)??META0.title);
+ const md=document.querySelector('meta[name=description]');if(md)md.content=LANG==="ko"?META0.desc:(T1(META0.desc)??META0.desc);
+ document.querySelectorAll(".langsel").forEach(s=>s.value=LANG);
+ document.querySelectorAll('a[data-keep-lang]').forEach(a=>{const base=a.getAttribute("href").split("?")[0];a.setAttribute("href",base+(LANG!=="ko"?"?lang="+LANG:""))});
+ dateChip()};
+document.querySelectorAll(".langsel").forEach(s=>{s.innerHTML=Object.entries(LANGS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+ s.addEventListener("change",()=>{LANG=s.value;try{localStorage.setItem("lang",LANG)}catch(e){}
+  try{const u=new URL(location.href);if(LANG==="ko")u.searchParams.delete("lang");else u.searchParams.set("lang",LANG);history.replaceState(null,"",u.pathname+u.search+u.hash)}catch(e){}
+  applyLang();render();const pb=document.getElementById("postbox");if(pb&&window.__post)window.__post()})});
+window.__i18n={STAT,ATTR,META0};
+applyLang();
+
+
+/* ---- 앱 화면 · 설치 · 오프라인 ---- */
+{const root=document.documentElement;
+ const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+ const want=()=>isStandalone()||matchMedia("(max-width: 760px)").matches||new URLSearchParams(location.search).get("app")==="1";
+ const setApp=()=>{const on=want();root.classList.toggle("app",on);const m=document.getElementById("mini");if(m){m.classList.toggle("on",on||m.classList.contains("on"));m.setAttribute("aria-hidden",!m.classList.contains("on"));m.querySelectorAll("button,select,a").forEach(b=>b.tabIndex=m.classList.contains("on")?0:-1)}};
+ let wasApp=null;const setApp2=()=>{setApp();const mb=document.getElementById("mini");if(root.classList.contains("app")&&mb)root.style.setProperty("--appbar",mb.offsetHeight+"px");const a=root.classList.contains("app");if(wasApp!==null&&a!==wasApp)render();wasApp=a};setApp2();addEventListener("resize",setApp2);
+ // 실시간 / 누적 전환
+ const bs=document.getElementById("boardseg"),bw=document.getElementById("boards");
+ bs.addEventListener("click",e=>{const b=e.target.closest("[data-b]");if(!b)return;bw.dataset.show=b.dataset.b;bs.querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x===b))});
+ // 하단 탭
+ const tb=document.getElementById("tabbar");
+ tb.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;const g=b.dataset.go;
+  tb.querySelectorAll("button").forEach(x=>{if(x===b)x.setAttribute("aria-current","page");else x.removeAttribute("aria-current")});
+  if(g==="top")scrollTo({top:0,behavior:"smooth"});
+  else if(g==="search"){const q=document.getElementById("q");q.scrollIntoView({block:"center",behavior:"smooth"});setTimeout(()=>q.focus(),350)}
+  else{const s=document.getElementById(g);if(s)s.scrollIntoView({block:"start",behavior:"smooth"})}});
+ // 오프라인 표시
+ const off=document.getElementById("offline");const net=()=>{off.hidden=navigator.onLine!==false};addEventListener("online",net);addEventListener("offline",net);net();
+ // 설치 안내
+ const card=document.getElementById("installcard"),go=document.getElementById("installgo"),no=document.getElementById("installno"),ab=document.getElementById("appinstall"),txt=document.getElementById("installtext");
+ let dismissed=false;try{dismissed=localStorage.getItem("installNo")==="1"}catch(e){}
+ let deferred=null;
+ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;ab.hidden=false;if(!dismissed&&!isStandalone())card.hidden=false});
+ const install=async()=>{if(deferred){deferred.prompt();try{await deferred.userChoice}catch(x){}deferred=null;card.hidden=true;ab.hidden=true}
+  else if(isIOS){txt.textContent=T("Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.");card.hidden=false;go.hidden=true}};
+ go.addEventListener("click",install);ab.addEventListener("click",install);
+ no.addEventListener("click",()=>{card.hidden=true;try{localStorage.setItem("installNo","1")}catch(e){}});
+ if(isIOS&&!isStandalone()&&!dismissed&&root.classList.contains("app")){ab.hidden=false;card.hidden=false;txt.textContent=T("Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.");go.hidden=true}
+ addEventListener("appinstalled",()=>{card.hidden=true;ab.hidden=true});
+ // 오프라인 저장 (서비스 워커)
+ if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
+}
+
+fromHash();
+
+/* ---- 오늘의 해설 · 운영자 정보 · 광고 ---- */
+{const P0=(window.POSTS||[])[0],box=document.getElementById("postbox");
+ window.__post=()=>{if(P0)box.innerHTML=`<a class="postcard" href="${esc(P0.url)}${LANG!=="ko"?"?lang="+LANG:""}"><span><small>${esc(P0.date)}</small><strong>${esc(LANG!=="ko"&&P0.title_en?P0.title_en:P0.title)}</strong><p>${esc(LANG!=="ko"&&P0.summary_en?P0.summary_en:P0.summary)}</p></span><span class="go">${T("해설 읽기 →")}</span></a><p class="postmore"><a href="posts/${LANG!=="ko"?"?lang="+LANG:""}">${T("지난 해설 모두 보기 →")}</a></p>`};
+ if(P0)window.__post();else document.getElementById("postsec").remove();
+ const fop=document.getElementById("fop");
+ fop.textContent=`© ${new Date().getFullYear()} ${T(SITE.name||"오늘의 1위")}`+(SITE.operator?` · ${T("운영:")} ${SITE.operator}`:"")+(SITE.email?` · ${T("문의:")} ${SITE.email}`:"");
+ const AF=SITE.adfit||{};const mob=matchMedia("(max-width: 760px)").matches;let need=false;
+ document.querySelectorAll(".adslot").forEach(el=>{const u=AF[el.dataset.slot];if(!u)return;const unit=mob?u.mobile:u.pc;if(!unit||!unit.id)return;
+  el.innerHTML=`<span class="adlabel">${T("광고")}</span><ins class="kakao_ad_area" style="display:none;width:100%;" data-ad-unit="${esc(unit.id)}" data-ad-width="${+unit.w}" data-ad-height="${+unit.h}"></ins>`;need=true});
+ if(need){const s=document.createElement("script");s.async=true;s.charset="utf-8";s.src="https://t1.daumcdn.net/kas/static/ba.min.js";document.body.appendChild(s)}
+ if(SITE.adsenseClient&&/^ca-pub-\d+$/.test(SITE.adsenseClient)){const s=document.createElement("script");s.async=true;s.crossOrigin="anonymous";s.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+SITE.adsenseClient;document.head.appendChild(s)}
+}
+
+}
+</script>
+</body>
+</html>

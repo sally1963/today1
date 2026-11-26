@@ -1,0 +1,45 @@
+/* 소개·개인정보처리방침·해설 페이지 공용 스타일 */
+:root{color-scheme:light dark;--bg:light-dark(#fff6ec,#140f13);--card:light-dark(#fff,#211a20);--ink:light-dark(#1b1216,#fbf3ee);--sub:light-dark(#6b5a60,#bfaeb4);--line:light-dark(#f0e2d6,#33282f);--c:#ff1f3d;--gold:#ffc83d}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+a{color:var(--c)}
+.top{background:var(--c);color:#fff;padding:18px max(5vw,16px)}
+.top-in{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 18px}
+.logo{font:400 30px/1 "Black Han Sans",sans-serif;color:#fff;text-decoration:none}
+.logo span{color:var(--gold)}
+.top nav{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:15px;font-weight:700}
+.top nav a{color:#fff;text-decoration:none;min-height:36px;display:inline-flex;align-items:center}
+.top nav a[aria-current]{text-decoration:underline;text-underline-offset:5px}
+main{max-width:860px;margin:0 auto;padding:clamp(24px,5vw,56px) max(5vw,16px)}
+h1{font:400 clamp(30px,5vw,44px)/1.15 "Black Han Sans",sans-serif;margin:0 0 10px;text-wrap:balance}
+h2{font-size:22px;line-height:1.35;margin:38px 0 10px}
+h3{font-size:18px;margin:24px 0 6px}
+.meta{color:var(--sub);font-size:15px;margin:0 0 26px}
+.lead{font-size:19px;color:var(--ink);background:var(--card);border-left:6px solid var(--c);border-radius:14px;padding:18px 22px;margin:0 0 10px}
+.card{background:var(--card);border-radius:18px;padding:6px 24px 18px;margin:18px 0;box-shadow:0 1px 0 var(--line)}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fill{background:#fff3c4;color:#5a3a00;border-radius:6px;padding:0 6px}
+.posts{list-style:none;padding:0;margin:0}
+.posts li{margin:0 0 14px}
+.posts a{display:block;background:var(--card);border-radius:18px;padding:18px 22px;text-decoration:none;color:inherit;border-left:6px solid var(--c)}
+.posts small{color:var(--c);font-weight:700}
+.posts strong{display:block;font-size:20px;line-height:1.35;margin:2px 0 4px}
+.posts p{margin:0;color:var(--sub);font-size:15px}
+.adslot{text-align:center;margin:28px 0}.adslot:empty{display:none}
+.adslot .adlabel{display:block;font-size:11px;color:var(--sub)}
+footer{max-width:860px;margin:0 auto;padding:24px max(5vw,16px) 48px;color:var(--sub);font-size:14px;border-top:1px solid var(--line)}
+footer a{color:var(--ink)}
+a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:600px){body{font-size:16px}table{font-size:13px}}
+.lang{display:inline-flex;align-items:center;gap:6px;color:#fff}
+.langsel{font:700 14px "Noto Sans KR",sans-serif;min-height:36px;border-radius:999px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:#fff;padding:0 10px;cursor:pointer}
+.langsel option{color:#111;background:#fff}
+.langsel:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.tnote{background:#fff3c4;color:#5a3a00;border-radius:12px;padding:12px 16px;margin:0 0 22px;font-size:15px}
+.tnote a{color:#5a3a00;font-weight:700}
+:root:not([lang=ko]) h1,:root:not([lang=ko]) .logo{font-family:"Noto Sans","Noto Sans SC","Noto Sans JP","Noto Sans KR",system-ui,sans-serif;font-weight:900}
+:root[lang=zh-CN] body{font-family:"Noto Sans SC","Noto Sans KR",system-ui,sans-serif}
+:root[lang=ja] body{font-family:"Noto Sans JP","Noto Sans KR",system-ui,sans-serif}
+:root[lang=en] body,:root[lang=es] body,:root[lang=fr] body,:root[lang=ru] body{font-family:"Noto Sans","Noto Sans KR",system-ui,sans-serif}

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 도메인 연결 후 아래 주소의 example.com 을 내 도메인으로 바꾸세요.
+Sitemap: https://example.com/sitemap.xml
