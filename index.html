@@ -11,6 +11,8 @@
 <meta name="theme-color" content="#ff1f3d">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
+<script>addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e});</script>
+
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -694,12 +696,19 @@ applyLang();
  let dismissed=false;try{dismissed=localStorage.getItem("installNo")==="1"}catch(e){}
  let deferred=null;
  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
- addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;ab.hidden=false;if(!dismissed&&!isStandalone())card.hidden=false});
+ const isAndroid=/android/i.test(navigator.userAgent);
+ const IOS_TXT="Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.",AND_TXT="크롬 오른쪽 위 ⋮ 메뉴를 누른 뒤 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르세요.";
+ const showHint=k=>{txt.textContent=T(k);go.hidden=true;ab.hidden=false;card.hidden=false};
+ const gotPrompt=e=>{deferred=e;ab.hidden=false;go.hidden=false;txt.textContent=T("홈 화면에 추가해 앱처럼 쓰세요.");if(!dismissed&&!isStandalone())card.hidden=false};
+ if(window.__bip)gotPrompt(window.__bip);
+ addEventListener("beforeinstallprompt",e=>{e.preventDefault();gotPrompt(e)});
  const install=async()=>{if(deferred){deferred.prompt();try{await deferred.userChoice}catch(x){}deferred=null;card.hidden=true;ab.hidden=true}
-  else if(isIOS){txt.textContent=T("Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.");card.hidden=false;go.hidden=true}};
+  else if(isIOS)showHint(IOS_TXT);else showHint(AND_TXT)};
  go.addEventListener("click",install);ab.addEventListener("click",install);
  no.addEventListener("click",()=>{card.hidden=true;try{localStorage.setItem("installNo","1")}catch(e){}});
- if(isIOS&&!isStandalone()&&!dismissed&&root.classList.contains("app")){ab.hidden=false;card.hidden=false;txt.textContent=T("Safari 아래쪽 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 고르세요.");go.hidden=true}
+ if(isIOS&&!isStandalone()&&!dismissed&&root.classList.contains("app"))showHint(IOS_TXT);
+ // 안드로이드 크롬이 설치 창을 바로 주지 않을 때(첫 방문 등) 메뉴로 설치하는 방법을 알려 줍니다.
+ if(isAndroid&&!isStandalone()&&!dismissed)setTimeout(()=>{if(!deferred&&!isStandalone())showHint(AND_TXT)},4000);
  addEventListener("appinstalled",()=>{card.hidden=true;ab.hidden=true});
  // 오프라인 저장 (서비스 워커)
  if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
