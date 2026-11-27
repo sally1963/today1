@@ -115,7 +115,7 @@ def narration():
         out.append((f"{lead}{frm}: {ti.rstrip('.!')}! {tail[0].upper() + tail[1:]}",
                     f"{ko_head}\n'{short(it[0])}'\n하루 {views(it[2])} 회!"))
     out.append(("For the full top ten, search Today's Number One. Follow for tomorrow's ranking!",
-                "4~10위, 음악·스포츠·키즈 순위는\n'오늘의 1위'에서!\n내일 순위도 팔로우하세요"))
+                "전체 순위와 무료 앱은 QR·프로필 링크에서!\n홈 화면에 추가하면 앱으로 매일 확인\n내일 순위도 팔로우하세요"))
     return out
 
 MODE = os.environ.get("VOICE", "en")  # en: 영어 목소리+한글 자막 / ko: 한국어 목소리+영어 자막
@@ -149,7 +149,7 @@ def narration_ko():
         out.append((f"{head} {what}. {tail}",
                     f"{sub_head}\n'{short(ti, 32)}'\n{m_short(it[2])} views in {'just ' if r == 1 else ''}one day!"))
     out.append(("4위부터 10위, 음악과 스포츠 순위는 검색창에 오늘의 1위! 내일 순위도 팔로우하세요.",
-                "Ranks 4–10, music, sports & kids:\nsearch 'Today's No.1'\nFollow for tomorrow's ranking!"))
+                "Full TOP 10 & free app:\nscan the QR or tap the link in bio\nFollow for tomorrow's ranking!"))
     return out
 
 def seconds(line):  # 말하기 속도에 맞춘 장면 길이
@@ -227,6 +227,55 @@ def card(im, box, radius=56, fill=(255, 255, 255)):
 
 # ---------- 장면 ----------
 # 틱톡 화면은 아래쪽(약 380px)과 오른쪽(약 140px)을 버튼·글이 가리므로 내용은 가운데 위쪽에 둡니다.
+SITE_URL = "sally1963.github.io/today1"
+LINK = "https://sally1963.github.io/today1/?utm_source=video"
+
+def qr_matrix(text):
+    """npm 에 들어 있는 qrcode-terminal 의 QR 생성기로 모듈 배열을 만듭니다."""
+    import glob
+    cands = glob.glob("/opt/node*/lib/node_modules/npm/node_modules/qrcode-terminal") + \
+            glob.glob("/usr/lib/node_modules/npm/node_modules/qrcode-terminal") + \
+            glob.glob("/usr/local/lib/node_modules/npm/node_modules/qrcode-terminal")
+    if not cands:
+        return None
+    js = ("const Q=require('./vendor/QRCode'),L=require('./vendor/QRCode/QRErrorCorrectLevel');"
+          "const q=new Q(-1,L.M);q.addData(process.argv[1]);q.make();const n=q.getModuleCount(),m=[];"
+          "for(let r=0;r<n;r++){let s='';for(let c=0;c<n;c++)s+=q.isDark(r,c)?'1':'0';m.push(s)}"
+          "console.log(JSON.stringify(m))")
+    try:
+        out = subprocess.run(["node", "-e", js, text], cwd=cands[0], capture_output=True, text=True, check=True).stdout
+        return json.loads(out)
+    except Exception:
+        return None
+
+def draw_qr(im, cx, cy, size, text):
+    m = qr_matrix(text)
+    if not m:
+        return False
+    n = len(m); q = 4; cell = size / (n + 2 * q)
+    d = ImageDraw.Draw(im)
+    x0, y0 = cx - size / 2, cy - size / 2
+    d.rounded_rectangle([x0, y0, x0 + size, y0 + size], 24, fill="white")
+    for r, row in enumerate(m):
+        for c, v in enumerate(row):
+            if v == "1":
+                x = x0 + (c + q) * cell; y = y0 + (r + q) * cell
+                d.rectangle([x, y, x + cell + 0.6, y + cell + 0.6], fill=(25, 15, 20))
+    return True
+
+def link_strip(im, y=1345):
+    """모든 장면에 사이트·앱 안내 띠를 넣습니다."""
+    d = ImageDraw.Draw(im); f = font("bold", 38)
+    txt = f"{SITE_URL}  ·  무료 앱 설치"
+    tw = d.textlength(txt, font=f) + 70 + 40
+    x0 = (W - tw) / 2
+    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(ov).rounded_rectangle([x0, y - 36, x0 + tw, y + 36], 36, fill=(255, 255, 255, 46), outline=(255, 255, 255, 120), width=2)
+    im.paste(ov, (0, 0), ov)
+    d = ImageDraw.Draw(im)
+    d.text((x0 + 70 - 22, y), "↗", font=font("bold", 36), fill=GOLD, anchor="mm")
+    d.text((x0 + 70, y), txt, font=f, fill="white", anchor="lm")
+
 def scene_intro():
     im = bg(); brand(im); d = ImageDraw.Draw(im)
     pill(im, 470, DATE, font("bold", 46), INK, GOLD)
@@ -234,6 +283,7 @@ def scene_intro():
     center(d, 815, "가장 많이 본 영상은?", font("black", 92), "white")
     center(d, 1010, "TOP 3", font("black", 230), GOLD)
     center(d, 1215, "유튜브 · 쇼츠 · 인스타 릴스 조회수 합산", font("bold", 42), (255, 235, 238))
+    link_strip(im)
     return im
 
 def scene_rank(rank, it):
@@ -264,24 +314,26 @@ def scene_rank(rank, it):
     d.line([(box[0] + 80, y), (box[2] - 80, y)], fill=(240, 225, 228), width=3)
     d.text((W // 2, y + 60), "하루 조회수", font=font("bold", 40), fill=(150, 120, 128), anchor="mm")
     d.text((W // 2, y + 140), views(it[2]) + " 회", font=font("black", 92), fill=RED, anchor="mm")
-    if gold:
-        pill(im, box[3] + 120, "오늘의 1위", font("black", 50), INK, GOLD)
+    link_strip(im, max(1345, box[3] + 85))
     return im
 
 def scene_outro():
-    im = bg(); brand(im, 300); d = ImageDraw.Draw(im)
-    center(d, 590, "4위부터 10위,", font("black", 84), "white")
-    center(d, 700, "음악 · 스포츠 · 키즈 순위는", font("black", 76), "white")
-    box = (90, 830, W - 90, 1130)
+    im = bg(); brand(im, 170); d = ImageDraw.Draw(im)
+    center(d, 380, "전체 TOP 10 · 분야별 순위", font("black", 72), "white")
+    center(d, 470, "웹사이트와 무료 앱에서 매일 확인!", font("bold", 48), (255, 232, 236))
+    box = (110, 560, W - 110, 1310)
     card(im, box)
     d = ImageDraw.Draw(im)
-    d.text((W // 2, 925), "검색창에", font=font("bold", 46), fill=(140, 110, 120), anchor="mm")
-    f = font("black", 104); w1 = d.textlength("오늘의 ", font=f); w2 = d.textlength("1위", font=f)
-    x = (W - w1 - w2) / 2
-    d.text((x, 1040), "오늘의 ", font=f, fill=(30, 20, 25), anchor="lm")
-    d.text((x + w1, 1040), "1위", font=f, fill=RED, anchor="lm")
-    center(d, 1235, "sally1963.github.io/today1", font("bold", 46), "white")
-    center(d, 1320, "매일 밤 12시 새 순위 · 프로필 링크", font("bold", 40), (255, 225, 230))
+    if draw_qr(im, W // 2, 840, 420, LINK):
+        d.text((W // 2, 1095), "카메라로 QR을 찍어 바로 열기", font=font("bold", 42), fill=(140, 110, 120), anchor="mm")
+    else:
+        f = font("black", 104); w1 = d.textlength("오늘의 ", font=f); w2 = d.textlength("1위", font=f)
+        x = (W - w1 - w2) / 2
+        d.text((x, 840), "오늘의 ", font=f, fill=(30, 20, 25), anchor="lm")
+        d.text((x + w1, 840), "1위", font=f, fill=RED, anchor="lm")
+    d.text((W // 2, 1175), SITE_URL, font=font("black", 50), fill=RED, anchor="mm")
+    d.text((W // 2, 1245), "사이트에서 [앱 설치] → 홈 화면에 추가", font=font("bold", 38), fill=(120, 95, 105), anchor="mm")
+    center(d, 1370, "프로필 링크 · 검색: 오늘의 1위", font("bold", 42), "white")
     return im
 
 def subtitle(im, text):
