@@ -737,6 +737,7 @@ fromHash();
  document.querySelectorAll(".adslot").forEach(el=>{const u=AF[el.dataset.slot];if(!u)return;const unit=mob?u.mobile:u.pc;if(!unit||!unit.id)return;
   el.innerHTML=`<span class="adlabel">${T("광고")}</span><ins class="kakao_ad_area" style="display:none;width:100%;" data-ad-unit="${esc(unit.id)}" data-ad-width="${+unit.w}" data-ad-height="${+unit.h}"></ins>`;need=true});
  if(need){const s=document.createElement("script");s.async=true;s.charset="utf-8";s.src="https://t1.daumcdn.net/kas/static/ba.min.js";document.body.appendChild(s)}
+ (function(id){if(!id||!/^G-[A-Z0-9]+$/.test(id))return;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id="+id;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config",id);addEventListener("hashchange",function(){gtag("event","page_view",{page_location:location.href,page_title:document.title})})})(SITE.gaId);
  if(SITE.adsenseClient&&/^ca-pub-\d+$/.test(SITE.adsenseClient)){const s=document.createElement("script");s.async=true;s.crossOrigin="anonymous";s.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+SITE.adsenseClient;document.head.appendChild(s)}
 }
 

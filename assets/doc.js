@@ -72,5 +72,6 @@
     need = true;
   });
   if (need) { var sc = document.createElement("script"); sc.async = true; sc.charset = "utf-8"; sc.src = "https://t1.daumcdn.net/kas/static/ba.min.js"; document.body.appendChild(sc); }
+  (function(id){if(!id||!/^G-[A-Z0-9]+$/.test(id))return;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id="+id;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config",id);addEventListener("hashchange",function(){gtag("event","page_view",{page_location:location.href,page_title:document.title})})})(S.gaId);
   if (S.adsenseClient && /^ca-pub-\d+$/.test(S.adsenseClient)) { var g = document.createElement("script"); g.async = true; g.crossOrigin = "anonymous"; g.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + S.adsenseClient; document.head.appendChild(g); }
 })();
