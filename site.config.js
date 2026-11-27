@@ -28,5 +28,5 @@ window.SITE = {
 
   // 4) 구글 애널리틱스(방문자 통계) — analytics.google.com 에서 받은 측정 ID(G-로 시작)를 넣으세요.
   //    비워 두면 통계 코드는 붙지 않습니다.
-  gaId: ""
+  gaId: "G-2BVT26R4XJ"
 };
