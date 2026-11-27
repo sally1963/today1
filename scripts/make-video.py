@@ -152,6 +152,31 @@ def narration_ko():
                 "Full TOP 10 & free app:\nscan the QR or tap the link in bio\nFollow for tomorrow's ranking!"))
     return out
 
+SHORT = os.environ.get("LEN", "") == "short"   # short: 15초 버전
+SHORT_SEC = [2.2, 3.0, 3.0, 3.4, 3.4]
+
+def narration_short():
+    """15초 버전: (목소리, 자막) 목록. MODE=ko 이면 한국어 목소리+영어 자막."""
+    ko = MODE == "ko"
+    world_ko = "전 세계" if REGION == "global" else "대한민국"
+    world_en = "worldwide" if REGION == "global" else "in South Korea"
+    out = [("오늘 " + world_ko + " 조회수 TOP 3!" if ko else f"Today's most-watched top three, {world_en}!",
+            f"Today's most-watched TOP 3 {world_en}!" if ko else f"오늘 {WHERE} 조회수 TOP 3!")]
+    for r in (3, 2, 1):
+        if len(items) < r:
+            continue
+        it = items[r - 1]
+        if ko:
+            say = ("대망의 1위! 하루 " if r == 1 else f"{r}위, 하루 ") + views_say(it[2]) + " 회!"
+            sub = f"No.{r} — '{short(clean(en(it[0])), 30)}'\n{m_short(it[2])} views in one day!"
+        else:
+            say = ("And number one: " if r == 1 else f"Number {WORD[r]}: ") + f"{millions(it[2])} views in a day!"
+            sub = f"{r}위 '{short(it[0], 22)}'\n하루 {views(it[2])} 회!"
+        out.append((say, sub))
+    out.append(("전체 순위와 무료 앱은 프로필 링크에서!" if ko else "Full top ten and free app, link in bio!",
+                "Full TOP 10 & free app:\nlink in bio or scan the QR" if ko else "전체 순위·무료 앱은\n프로필 링크 또는 QR에서!"))
+    return out
+
 def seconds(line):  # 말하기 속도에 맞춘 장면 길이
     if HANGUL.search(line):
         return round(max(3.5, len(re.sub(r"[^가-힣0-9A-Za-z]", "", line)) / 6.0 + 0.9), 1)
@@ -365,14 +390,14 @@ def encode(png, sec, out):
     os.replace(tmp, out)
 
 def main(preview=False):
-    nar = narration_ko() if MODE == "ko" else narration()
+    nar = narration_short() if SHORT else (narration_ko() if MODE == "ko" else narration())
     pics = [scene_intro()] + [scene_rank(r, items[r - 1]) for r in (3, 2, 1) if len(items) >= r] + [scene_outro()]
     subs = os.environ.get("SUB", "1") == "1"
     scenes = []
     vdir = os.environ.get("VOICE_DIR")  # voice1.wav ~ voiceN.wav 가 있으면 목소리를 합칩니다
     wavs = []
     for k, (im, (say, sub)) in enumerate(zip(pics, nar)):
-        sec = seconds(say)
+        sec = SHORT_SEC[min(k, len(SHORT_SEC) - 1)] if SHORT else seconds(say)
         w = os.path.join(vdir, f"voice{k+1}.wav") if vdir else None
         if w and os.path.exists(w):
             d = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", w],
@@ -383,11 +408,11 @@ def main(preview=False):
             ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", sil)]
             if starts and (len(ends) < len(starts) or ends[-1] >= d - 0.05):
                 d = starts[-1]  # 끝의 무음은 빼고 계산
-            sec = round(max(3.0, d + 0.3 + 0.45), 2)
+            sec = round(max(sec if SHORT else 3.0, d + 0.3 + (0.2 if SHORT else 0.45)), 2)
             wavs.append((w, sec))
         scenes.append((subtitle(im, sub) if subs else im, sec))
     os.makedirs(OUTDIR, exist_ok=True)
-    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ("-ko" if MODE == "ko" else ""))
+    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ("-ko" if MODE == "ko" else "") + ("-15s" if SHORT else ""))
     # 내레이션 대본(영어)·자막 시간표
     tsec, rows, srt = 0.0, [], []
     def ts(x):
