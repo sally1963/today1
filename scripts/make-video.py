@@ -325,7 +325,13 @@ def main(preview=False):
         if w and os.path.exists(w):
             d = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", w],
                                      capture_output=True, text=True).stdout.strip())
-            sec = round(max(3.0, d + 0.7), 2)
+            sil = subprocess.run(["ffmpeg", "-i", w, "-af", "silencedetect=n=-45dB:d=0.25", "-f", "null", "-"],
+                                 capture_output=True, text=True).stderr
+            starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", sil)]
+            ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", sil)]
+            if starts and (len(ends) < len(starts) or ends[-1] >= d - 0.05):
+                d = starts[-1]  # 끝의 무음은 빼고 계산
+            sec = round(max(3.0, d + 0.3 + 0.45), 2)
             wavs.append((w, sec))
         scenes.append((subtitle(im, sub) if subs else im, sec))
     os.makedirs(OUTDIR, exist_ok=True)
@@ -361,7 +367,7 @@ def main(preview=False):
         args, flt = [], []
         for k, (w, sec) in enumerate(wavs):
             args += ["-i", w]
-            flt.append(f"[{k+1}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=300:all=1,apad,atrim=0:{sec}[a{k}]")
+            flt.append(f"[{k+1}:a]aresample=48000,aformat=channel_layouts=stereo,loudnorm=I=-15:TP=-1.5:LRA=11,aresample=48000,adelay=300:all=1,apad,atrim=0:{sec}[a{k}]")
         flt.append("".join(f"[a{k}]" for k in range(len(wavs))) + f"concat=n={len(wavs)}:v=0:a=1[aout]")
         tmp2 = out[:-4] + ".part.mp4"
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", out, *args, "-filter_complex", ";".join(flt),
