@@ -395,7 +395,7 @@ def main(preview=False):
     subs = os.environ.get("SUB", "1") == "1"
     scenes = []
     vdir = os.environ.get("VOICE_DIR")  # voice1.wav ~ voiceN.wav 가 있으면 목소리를 합칩니다
-    wavs = []
+    wavs, need = [], []
     for k, (im, (say, sub)) in enumerate(zip(pics, nar)):
         sec = SHORT_SEC[min(k, len(SHORT_SEC) - 1)] if SHORT else seconds(say)
         w = os.path.join(vdir, f"voice{k+1}.wav") if vdir else None
@@ -410,7 +410,18 @@ def main(preview=False):
                 d = starts[-1]  # 끝의 무음은 빼고 계산
             sec = round(max(sec if SHORT else 3.0, d + (0.15 + 0.2 if SHORT else 0.3 + 0.45)), 2)
             wavs.append((w, sec))
+            need.append(round(d + 0.35, 2))
+        else:
+            need.append(sec)
         scenes.append((subtitle(im, sub) if subs else im, sec))
+    if SHORT and wavs:  # 15초를 넘으면 목소리가 끝난 뒤 남는 여유 시간을 줄여 맞춥니다
+        over = sum(s for _, s in scenes) - 15.0
+        for k in sorted(range(len(scenes)), key=lambda k: -(scenes[k][1] - need[k])):
+            if over <= 0.01:
+                break
+            cut = min(over, max(0.0, scenes[k][1] - max(need[k], 2.0)))
+            scenes[k] = (scenes[k][0], round(scenes[k][1] - cut, 2)); over -= cut
+        wavs = [(w, scenes[k][1]) for k, (w, _) in enumerate(wavs)]
     os.makedirs(OUTDIR, exist_ok=True)
     base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ("-ko" if MODE == "ko" else "") + ("-15s" if SHORT else ""))
     # 내레이션 대본(영어)·자막 시간표
