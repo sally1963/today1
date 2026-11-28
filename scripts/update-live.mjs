@@ -30,7 +30,7 @@ for (const key of Object.keys(D)) {
 }
 console.log(`영상 ${videos.size}개, 채널 ${channels.size}개`);
 if (DRY) process.exit(0);
-if (!KEY) { console.error("YOUTUBE_API_KEY가 없습니다. 저장소 Settings → Secrets에 등록해 주세요."); process.exit(1); }
+if (!KEY) { console.log("::notice::YOUTUBE_API_KEY가 아직 없어 실시간 조회수 갱신을 건너뜁니다. 저장소 Settings → Secrets → Actions에 등록하면 자동으로 시작됩니다."); process.exit(0); }
 
 const get = async (p, params) => {
   const q = new URLSearchParams({ ...params, key: KEY });
