@@ -9,8 +9,8 @@ window.SITE = {
   embedPlayer: true,
 
   // 1) 운영자 정보 — 소개·개인정보처리방침·하단에 표시됩니다. 꼭 바꿔 주세요.
-  operator: "",            // 예: "홍길동" 또는 상호명
-  email: "",               // 예: "contact@내도메인.com"
+  operator: "오늘운영자",          // 예: "홍길동" 또는 상호명
+  email: "dooyong-kim@daum.net",          // 예: "contact@내도메인.com"
   domain: "",              // 예: "https://today1.kr"  (마지막 / 없이)
 
   // 2) 카카오 애드핏 — 광고단위 ID(DAN-으로 시작)를 넣으면 그 자리에 광고가 나옵니다.
