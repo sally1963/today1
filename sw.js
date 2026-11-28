@@ -1,7 +1,7 @@
 /* 오늘의 1위 — 서비스 워커 (앱 설치·오프라인 보기)
-   화면 파일은 저장해 두고 바로 열고, 순위 데이터는 항상 최신을 먼저 받아 옵니다.
+   인터넷이 되면 항상 최신 화면·데이터를 먼저 받고, 끊기면 저장본으로 엽니다.
    화면 코드를 바꿔 올릴 때는 아래 VERSION 숫자를 올려 주세요. */
-const VERSION = "v7-2026-11-28";
+const VERSION = "v8-2026-11-28";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 const FONT = "fonts";
@@ -13,7 +13,7 @@ const SHELL_FILES = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES.map(u => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
@@ -46,12 +46,16 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // 화면 파일: 저장본을 바로 보여 주고 뒤에서 새로 받아 둠
-  e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => {
-    const net = fetch(req).then(res => {
-      if (res.ok) caches.open(SHELL).then(c => c.put(req, res.clone()));
-      return res;
-    }).catch(() => hit || caches.match("index.html"));
-    return hit || net;
-  }));
+  // 아이콘: 저장본을 바로 보여 줌
+  if (/\/icons\//.test(url.pathname)) {
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req)));
+    return;
+  }
+
+  // 화면 파일(페이지·설정·번역·스타일): 인터넷이 되면 항상 최신을 먼저 받고, 안 되면 저장본
+  // (예전에는 저장본을 먼저 보여 줘서 수정 사항이 앱에 한 번 늦게 보였습니다)
+  e.respondWith(fetch(req, { cache: "no-cache" }).then(res => {
+    if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
+    return res;
+  }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match("index.html"))));
 });
