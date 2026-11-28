@@ -17,13 +17,13 @@ OUTDIR = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "video")
 W, H, FPS = 1080, 1920, 30
 RED, RED2, GOLD, INK = (255, 31, 61), (255, 104, 124), (255, 200, 61), (58, 38, 0)
 
-def font(weight, size):
+def font(weight, size, idx=1):
     path = {"black": "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc",
             "bold": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
             "reg": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"}[weight]
     if not os.path.exists(path):
         path = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
-    return ImageFont.truetype(path, size, index=1)  # 1 = KR
+    return ImageFont.truetype(path, size, index=idx)  # 1 = KR, 2 = SC(중국어 간체)
 
 # ---------- 데이터 ----------
 src = open(os.path.join(ROOT, "data/rankings.js"), encoding="utf-8").read()
@@ -155,8 +155,25 @@ def narration_ko():
 SHORT = os.environ.get("LEN", "") == "short"   # short: 15초 버전
 SHORT_SEC = [2.2, 3.0, 3.0, 3.4, 3.4]
 
+ZH_NUM = {1: "一", 2: "二", 3: "三"}
+def narration_short_zh():
+    """15초 버전 중국어 목소리 + 중국어 자막"""
+    where = "全球" if REGION == "global" else "韩国"
+    out = [(f"今日{where}播放量前三名！", f"今日{where}播放量 TOP 3！")]
+    for r in (3, 2, 1):
+        if len(items) < r:
+            continue
+        it = items[r - 1]; w = round(it[2] / 1e4)
+        say = (f"第一名！单日播放{w}万次！" if r == 1 else f"第{ZH_NUM[r]}名，单日播放{w}万次！")
+        sub = f"第{r}名 '{short(clean(en(it[0])), 24)}'\n单日播放 {w:,}万次！"
+        out.append((say, sub))
+    out.append(("完整排行和免费应用，请点主页链接！", "完整 TOP 10 和免费应用：\n点主页链接或扫描二维码！"))
+    return out
+
 def narration_short():
-    """15초 버전: (목소리, 자막) 목록. MODE=ko 이면 한국어 목소리+영어 자막."""
+    """15초 버전: (목소리, 자막) 목록. MODE=ko 이면 한국어 목소리+영어 자막, zh 이면 중국어 목소리+중국어 자막."""
+    if MODE == "zh":
+        return narration_short_zh()
     ko = MODE == "ko"
     world_ko = "전 세계" if REGION == "global" else "대한민국"
     world_en = "worldwide" if REGION == "global" else "in South Korea"
@@ -168,7 +185,7 @@ def narration_short():
         it = items[r - 1]
         if ko:
             say = ("대망의 1위! 하루 " if r == 1 else f"{r}위, 하루 ") + views_say(it[2]) + " 회!"
-            sub = f"No.{r} — '{short(clean(en(it[0])), 30)}'\n{m_short(it[2])} views in one day!"
+            sub = f"No.{r} — '{short(clean(en(it[0])), 24)}'\n{m_short(it[2])} views in one day!"
         else:
             say = ("And number one: " if r == 1 else f"Number {WORD[r]}: ") + f"{millions(it[2])} views in a day!"
             sub = f"{r}위 '{short(it[0], 22)}'\n하루 {views(it[2])} 회!"
@@ -178,6 +195,8 @@ def narration_short():
     return out
 
 def seconds(line):  # 말하기 속도에 맞춘 장면 길이
+    if re.search("[\u4e00-\u9fff]", line) and not HANGUL.search(line):
+        return round(max(3.0, len(re.sub(r"[^\u4e00-\u9fff0-9]", "", line)) / 5.0 + 0.8), 1)
     if HANGUL.search(line):
         return round(max(3.5, len(re.sub(r"[^가-힣0-9A-Za-z]", "", line)) / 6.0 + 0.9), 1)
     return round(max(3.5, len(line.split()) / 3.0 + 0.8), 1)
@@ -363,12 +382,12 @@ def scene_outro():
 
 def subtitle(im, text):
     """아래쪽 버튼 영역(약 380px) 바로 위에 한글 자막을 그립니다."""
-    d = ImageDraw.Draw(im); f = font("bold", 50)
+    d = ImageDraw.Draw(im); f = font("bold", 50, 2 if MODE == "zh" else 1)
     lines = []
     for part in text.split("\n"):
         lines += wrap(d, part, f, W - 200, 2)
     lines = lines[:3]
-    lh = 68; hgt = lh * len(lines) + 44; cy = 1560
+    lh = 68; hgt = lh * len(lines) + 44; cy = max(1560, 1462 + hgt / 2)  # 안내 띠와 겹치지 않게
     y0 = cy - hgt / 2
     wmax = max(d.textlength(l, font=f) for l in lines)
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -423,13 +442,13 @@ def main(preview=False):
             scenes[k] = (scenes[k][0], round(scenes[k][1] - cut, 2)); over -= cut
         wavs = [(w, scenes[k][1]) for k, (w, _) in enumerate(wavs)]
     os.makedirs(OUTDIR, exist_ok=True)
-    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ("-ko" if MODE == "ko" else "") + ("-15s" if SHORT else ""))
+    base = os.path.join(OUTDIR, f"today1-{meta['updated']}-{REGION}" + ({"ko": "-ko", "zh": "-zh"}.get(MODE, "")) + ("-15s" if SHORT else ""))
     # 내레이션 대본(영어)·자막 시간표
     tsec, rows, srt = 0.0, [], []
     def ts(x):
         return f"{int(x//3600):02}:{int(x%3600//60):02}:{int(x%60):02},{int(round(x%1*1000)):03}"
     for k, ((eng, ko), (_, sec)) in enumerate(zip(nar, scenes)):
-        vl, sl = ("한국어 목소리", "영어 자막") if MODE == "ko" else ("영어 목소리", "한글 자막")
+        vl, sl = {"ko": ("한국어 목소리", "영어 자막"), "zh": ("중국어 목소리", "중국어 자막")}.get(MODE, ("영어 목소리", "한글 자막"))
         rows.append(f"[{tsec:4.1f}초 ~ {tsec+sec:4.1f}초]\n{vl}: {eng}\n{sl}: {ko.replace(chr(10), ' ')}\n")
         srt.append(f"{k+1}\n{ts(tsec+0.2)} --> {ts(tsec+sec-0.1)}\n{ko}\n")
         tsec += sec
